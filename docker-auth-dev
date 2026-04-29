@@ -1,0 +1,48 @@
+# Base image with PHP 7.3 and Laravel app
+FROM php:7.3-fpm
+
+# Metadata
+LABEL maintainer="Arin Suga <arinsuga@gmail.com>" \
+      version="1.0" \
+      description="authdev - Laravel 5.8 app with PHP 7.3" \
+      license="MIT" \
+      vendor="Arin Suga" \
+      name="authdev"
+
+# Set environment variables
+ENV HOME=/home/authapi \
+    APP_ENV=local APP_URL=http://localhost \
+    DB_CONNECTION=mysql DB_HOST=127.0.0.1 DB_PORT=3306 \
+    DB_DATABASE=DB_NAME DB_USERNAME=DB_USERNAME DB_PASSWORD=DB_PASSWORD \
+    JWT_TTL=525600 JWT_REFRESH_TTL=525600
+
+# Setup this Environment at docker-compose.yml .env or kubernetes secret
+# DB_PASSWORD=DB_PASSWORD JWT_SECRET=JWT_SECRET GEOCODING_APIKEY=GEOCODING_APIKEY
+
+# Set working directory
+WORKDIR /var/www/html/authapi
+
+# Copy Laravel app files
+COPY authapi/.  /var/www/html/authapi
+# Copy .env
+COPY .env_authapi /var/www/html/authapi/.env
+
+# Copy wait-for-it.sh
+COPY wait-for-it.sh /usr/local/bin/wait-for-it.sh
+# Copy entrypoint.sh
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+# Install Composer from official image
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+# Install system dependencies and PHP extensions ( openssl already installed )
+RUN apt update && apt install -y --no-install-recommends \
+    libonig-dev libxml2-dev libssl-dev libzip-dev unzip \
+    curl git zip libcurl4-openssl-dev libpq-dev mariadb-client ; \
+    docker-php-ext-install bcmath pdo_mysql ctype json mbstring pdo tokenizer xml ; \
+    rm -rf /var/lib/apt/lists/*
+
+# Expose port 9000
+EXPOSE 9000
+
+# Run entrypoint
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+data:
+  app-env: "dev"
+  app-url: "http://authapi.localhost"
+  db-connection: "mysql"
+  db-host: "mysqldb-service"
+  db-port: "3306"
+  db-database: "authdb"
+  pma-absolute-uri: "http://mysql.localhost"

@@ -1,0 +1,40 @@
+import axios from 'axios';
+import { authSubject } from './AuthService';
+
+const ApiService = axios.create({
+    baseURL: process.env.EXPO_PUBLIC_APPAPIURL,
+    headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+    },
+});
+
+// Request interceptor to attach JWT token
+ApiService.interceptors.request.use(
+    (config) => {
+        const auth = authSubject.value;
+        if (auth && auth.token && auth.token.token) {
+            config.headers.Authorization = `Bearer ${auth.token.token}`;
+        }
+        return config;
+    },
+    (error) => {
+        return Promise.reject(error);
+    }
+);
+
+// Response interceptor to handle 401 errors (token expired)
+ApiService.interceptors.response.use(
+    (response) => {
+        return response;
+    },
+    (error) => {
+        if (error.response && error.response.status === 401) {
+            // Optional: Handle auto-logout or token refresh here
+            console.log('Unauthorized - possible token expiry');
+        }
+        return Promise.reject(error);
+    }
+);
+
+export default ApiService;

@@ -1,0 +1,10 @@
+FROM phpmyadmin:latest
+
+# Setup PHP.ini
+RUN cat <<EOF > /usr/local/etc/php/conf.d/uploads.ini
+upload_max_filesize=512M
+post_max_size=512M
+memory_limit=512M
+EOF
+
+EXPOSE 80

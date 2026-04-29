@@ -1,0 +1,511 @@
+diff --git a/appapi/database/seeds/DatabaseSeeder.php b/appapi/database/seeds/DatabaseSeeder.php
+index ce7dcdf..e968001 100644
+--- a/appapi/database/seeds/DatabaseSeeder.php
++++ b/appapi/database/seeds/DatabaseSeeder.php
+@@ -24,36 +24,34 @@ class DatabaseSeeder extends Seeder
+         // $this->call('AppUserTableSeeder');
+         // $this->call('RoleUserTableSeeder');
+ 
+-        // $this->call('UomsTableSeeder');
+         $this->call('UomNormalizationSeeder');
+-        
+         $this->call('RefftypesTableSeeder');
+         $this->call('SheetgroupsTableSeeder');
+         $this->call('VendortypesTableSeeder');
+-        $this->call('VendorsTableSeeder');
+ 
+         $this->call('ProjectstatusesTableSeeder');
+         $this->call('ContractstatusesTableSeeder');
+         $this->call('OrderstatusesTableSeeder');
+ 
++        // $this->call('VendorsTableSeeder');
+         // $this->call('ProjectsTableSeeder');
+-        DB::table('projects')->insert(
+-            [
+-                'project_name' => 'RT. Tirtayasa 001',
+-                'project_description' => 'Renovasi RT. Tirtayasa',
+-                'project_owner' => 'Tirtayasa',
+-                'project_pic' => 'Imam',
+-                'project_number' => 'tirtayasa-renovasi-001',
+-                'project_startdt' => null,
+-                'project_enddt' => null,
+-                'project_address' => 'Jl. Raya Tirtayasa, RT. 01, RW. 01, Kec. Tirtayasa, Kab. Bogor, Jawa Barat',
+-                'project_latitude' => '30.2672',
+-                'project_longitude' => '-97.7431',
+-                'projectstatus_id' => 0,
+-                'created_at' => now(),
+-                'updated_at' => now()
+-            ]
+-        );
++        // DB::table('projects')->insert(
++        //     [
++        //         'project_name' => 'RT. Tirtayasa 001',
++        //         'project_description' => 'Renovasi RT. Tirtayasa',
++        //         'project_owner' => 'Tirtayasa',
++        //         'project_pic' => 'Imam',
++        //         'project_number' => 'tirtayasa-renovasi-001',
++        //         'project_startdt' => null,
++        //         'project_enddt' => null,
++        //         'project_address' => 'Jl. Raya Tirtayasa, RT. 01, RW. 01, Kec. Tirtayasa, Kab. Bogor, Jawa Barat',
++        //         'project_latitude' => '30.2672',
++        //         'project_longitude' => '-97.7431',
++        //         'projectstatus_id' => 0,
++        //         'created_at' => now(),
++        //         'updated_at' => now()
++        //     ]
++        // );
+ 
+         // $this->call('ContractsTableSeeder');
+         // $this->call('ContractsheetsTableSeeder');
+diff --git a/appapi/database/seeds/RefftypesTableSeeder.php b/appapi/database/seeds/RefftypesTableSeeder.php
+index 7a169e3..51a5238 100644
+--- a/appapi/database/seeds/RefftypesTableSeeder.php
++++ b/appapi/database/seeds/RefftypesTableSeeder.php
+@@ -18,7 +18,7 @@ class RefftypesTableSeeder extends Seeder
+         $refftypes = [
+             [
+                 'refftype_code' => 'PO',
+-                'refftype_name' => 'Purchase Order',
++                'refftype_name' => 'PO',
+                 'refftype_description' => 'Purchase Order document',
+                 'is_active' => 1,
+                 'display_order' => 1,
+@@ -27,7 +27,7 @@ class RefftypesTableSeeder extends Seeder
+             ],
+             [
+                 'refftype_code' => 'SPK',
+-                'refftype_name' => 'Work Order',
++                'refftype_name' => 'SPK',
+                 'refftype_description' => 'Work Order document',
+                 'is_active' => 1,
+                 'display_order' => 2,
+diff --git a/appapi/database/seeds/VendortypesTableSeeder.php b/appapi/database/seeds/VendortypesTableSeeder.php
+index ddc9908..7f63b22 100644
+--- a/appapi/database/seeds/VendortypesTableSeeder.php
++++ b/appapi/database/seeds/VendortypesTableSeeder.php
+@@ -18,65 +18,72 @@ class VendortypesTableSeeder extends Seeder
+         // Insert vendor type data
+         $vendortypes = [
+             [
++                "id" => 1,
+                 'vendortype_code' => 'SUPPLIER',
+                 'vendortype_name' => 'Supplier',
+                 'vendortype_description' => 'Material and goods supplier',
+                 'is_active' => 1,
+-                'display_order' => 1,
++                'display_order' => 10,
+                 'created_at' => now(),
+                 'updated_at' => now(),
+             ],
+             [
+-                'vendortype_code' => 'CONTRACTOR',
+-                'vendortype_name' => 'Contractor',
+-                'vendortype_description' => 'Service contractor or subcontractor',
++                "id" => 2,
++                'vendortype_code' => 'DISTRIBUTOR',
++                'vendortype_name' => 'Distributor',
++                'vendortype_description' => 'Product Distributor',
+                 'is_active' => 1,
+-                'display_order' => 2,
++                'display_order' => 20,
+                 'created_at' => now(),
+                 'updated_at' => now(),
+             ],
+             [
+-                'vendortype_code' => 'DISTRIBUTOR',
+-                'vendortype_name' => 'Distributor',
+-                'vendortype_description' => 'Goods distributor or wholesaler',
++                "id" => 3,
++                'vendortype_code' => 'PRODUCT',
++                'vendortype_name' => 'Product Provider',
++                'vendortype_description' => 'Product Provider',
+                 'is_active' => 1,
+-                'display_order' => 3,
++                'display_order' => 30,
+                 'created_at' => now(),
+                 'updated_at' => now(),
+             ],
+             [
+-                'vendortype_code' => 'MANUFACTURER',
+-                'vendortype_name' => 'Manufacturer',
+-                'vendortype_description' => 'Direct manufacturer or producer',
++                "id" => 4,
++                'vendortype_code' => 'SERVICE',
++                'vendortype_name' => 'Service Provider',
++                'vendortype_description' => 'Professional services provider',
+                 'is_active' => 1,
+-                'display_order' => 4,
++                'display_order' => 40,
+                 'created_at' => now(),
+                 'updated_at' => now(),
+             ],
+             [
+-                'vendortype_code' => 'SERVICE_PROVIDER',
+-                'vendortype_name' => 'Service Provider',
+-                'vendortype_description' => 'Professional services provider',
++                "id" => 5,
++                'vendortype_code' => 'LOGISTICS',
++                'vendortype_name' => 'Logistics Provider',
++                'vendortype_description' => 'Transportation and logistics company',
+                 'is_active' => 1,
+-                'display_order' => 5,
++                'display_order' => 50,
+                 'created_at' => now(),
+                 'updated_at' => now(),
+             ],
+             [
+-                'vendortype_code' => 'CONSULTANT',
+-                'vendortype_name' => 'Consultant',
+-                'vendortype_description' => 'Consulting firm or expert',
++                "id" => 6,
++                'vendortype_code' => 'CONTRACTOR',
++                'vendortype_name' => 'Contractor',
++                'vendortype_description' => 'contractor or subcontractor',
+                 'is_active' => 1,
+-                'display_order' => 6,
++                'display_order' => 60,
+                 'created_at' => now(),
+                 'updated_at' => now(),
+             ],
+             [
+-                'vendortype_code' => 'LOGISTICS',
+-                'vendortype_name' => 'Logistics Provider',
+-                'vendortype_description' => 'Transportation and logistics company',
++                "id" => 7,
++                'vendortype_code' => 'CONSULTANT',
++                'vendortype_name' => 'Consultant',
++                'vendortype_description' => 'consultant',
+                 'is_active' => 1,
+-                'display_order' => 7,
++                'display_order' => 70,
+                 'created_at' => now(),
+                 'updated_at' => now(),
+             ],
+diff --git a/appnextjs/public/sw.js b/appnextjs/public/sw.js
+index 3c2c155..26dc25a 100644
+--- a/appnextjs/public/sw.js
++++ b/appnextjs/public/sw.js
+@@ -1 +1 @@
+-if(!self.define){let e,a={};const s=(s,t)=>(s=new URL(s+".js",t).href,a[s]||new Promise(a=>{if("document"in self){const e=document.createElement("script");e.src=s,e.onload=a,document.head.appendChild(e)}else e=s,importScripts(s),a()}).then(()=>{let e=a[s];if(!e)throw new Error(`Module ${s} didn’t register its module`);return e}));self.define=(t,n)=>{const i=e||("document"in self?document.currentScript.src:"")||location.href;if(a[i])return;let c={};const r=e=>s(e,i),o={module:{uri:i},exports:c,require:r};a[i]=Promise.all(t.map(e=>o[e]||r(e))).then(e=>(n(...e),c))}}define(["./workbox-4754cb34"],function(e){"use strict";importScripts(),self.addEventListener("message",e=>{e.data&&"SKIP_WAITING"===e.data.type&&self.skipWaiting()}),e.clientsClaim(),e.precacheAndRoute([{url:"/_next/static/29gEEOQdhOpAh52vpZLC1/_buildManifest.js",revision:"f8285188f12b55b28699205eea945cb2"},{url:"/_next/static/29gEEOQdhOpAh52vpZLC1/_ssgManifest.js",revision:"b6652df95db52feb4daf4eca35380933"},{url:"/_next/static/chunks/084914e6-d12c0aee2941f19d.js",revision:"d12c0aee2941f19d"},{url:"/_next/static/chunks/100057dd-bd82c8facd627fe8.js",revision:"bd82c8facd627fe8"},{url:"/_next/static/chunks/164f4fb6-0b8870136303aad8.js",revision:"0b8870136303aad8"},{url:"/_next/static/chunks/2170a4aa-5a8c4ef3e6af8b71.js",revision:"5a8c4ef3e6af8b71"},{url:"/_next/static/chunks/261-3f5aa267b1a209e7.js",revision:"3f5aa267b1a209e7"},{url:"/_next/static/chunks/2f0b94e8-6c6d1fd82de0e0c2.js",revision:"6c6d1fd82de0e0c2"},{url:"/_next/static/chunks/3050-ab4cbf6ce28ab58d.js",revision:"ab4cbf6ce28ab58d"},{url:"/_next/static/chunks/3224.9fa431b192e7a70f.js",revision:"9fa431b192e7a70f"},{url:"/_next/static/chunks/4bd1b696-7a9198eb45eb8b1c.js",revision:"7a9198eb45eb8b1c"},{url:"/_next/static/chunks/5134-47cb85e8da73b300.js",revision:"47cb85e8da73b300"},{url:"/_next/static/chunks/5455-469e9c6f32ece089.js",revision:"469e9c6f32ece089"},{url:"/_next/static/chunks/6282-14bd6257562e4553.js",revision:"14bd6257562e4553"},{url:"/_next/static/chunks/6987-f8c872ec911e4ced.js",revision:"f8c872ec911e4ced"},{url:"/_next/static/chunks/8031-c463cfb654386466.js",revision:"c463cfb654386466"},{url:"/_next/static/chunks/8245-1a72bc16e6b13404.js",revision:"1a72bc16e6b13404"},{url:"/_next/static/chunks/8511-4d46d8bcb94c217b.js",revision:"4d46d8bcb94c217b"},{url:"/_next/static/chunks/8633-718ee02585d21f9b.js",revision:"718ee02585d21f9b"},{url:"/_next/static/chunks/913.c4dab463e916e123.js",revision:"c4dab463e916e123"},{url:"/_next/static/chunks/9462-77427276179d3b45.js",revision:"77427276179d3b45"},{url:"/_next/static/chunks/9826-67e7e8d781d4aaa9.js",revision:"67e7e8d781d4aaa9"},{url:"/_next/static/chunks/9928-d84211d27880abf1.js",revision:"d84211d27880abf1"},{url:"/_next/static/chunks/9929-b4ff223425f2f6be.js",revision:"b4ff223425f2f6be"},{url:"/_next/static/chunks/ad2866b8.6b659644a7c0a401.js",revision:"6b659644a7c0a401"},{url:"/_next/static/chunks/app/(auth)/layout-95259e60d5036a7a.js",revision:"95259e60d5036a7a"},{url:"/_next/static/chunks/app/(auth)/login/page-0b5d4126af680f85.js",revision:"0b5d4126af680f85"},{url:"/_next/static/chunks/app/(auth)/register/page-9e1c4c70a4294084.js",revision:"9e1c4c70a4294084"},{url:"/_next/static/chunks/app/(dashboard)/contracts/%5Bid%5D/page-98946e9a70a807b5.js",revision:"98946e9a70a807b5"},{url:"/_next/static/chunks/app/(dashboard)/contracts/layout-95259e60d5036a7a.js",revision:"95259e60d5036a7a"},{url:"/_next/static/chunks/app/(dashboard)/contracts/new/page-7495b2e6bbb0cf8a.js",revision:"7495b2e6bbb0cf8a"},{url:"/_next/static/chunks/app/(dashboard)/contracts/page-3a42d80d71bb3782.js",revision:"3a42d80d71bb3782"},{url:"/_next/static/chunks/app/(dashboard)/dashboard/layout-95259e60d5036a7a.js",revision:"95259e60d5036a7a"},{url:"/_next/static/chunks/app/(dashboard)/dashboard/page-4fed9c310f6b23d7.js",revision:"4fed9c310f6b23d7"},{url:"/_next/static/chunks/app/(dashboard)/layout-636c2093eabde5e4.js",revision:"636c2093eabde5e4"},{url:"/_next/static/chunks/app/(dashboard)/orders/%5Bid%5D/page-20669b7ecb136b01.js",revision:"20669b7ecb136b01"},{url:"/_next/static/chunks/app/(dashboard)/orders/layout-95259e60d5036a7a.js",revision:"95259e60d5036a7a"},{url:"/_next/static/chunks/app/(dashboard)/orders/new/page-69338ecc784920b7.js",revision:"69338ecc784920b7"},{url:"/_next/static/chunks/app/(dashboard)/orders/page-fc18e99872132f4e.js",revision:"fc18e99872132f4e"},{url:"/_next/static/chunks/app/(dashboard)/projects/layout-95259e60d5036a7a.js",revision:"95259e60d5036a7a"},{url:"/_next/static/chunks/app/(dashboard)/projects/page-75226dbabae2994e.js",revision:"75226dbabae2994e"},{url:"/_next/static/chunks/app/(dashboard)/references/page-715003d7b8e31c61.js",revision:"715003d7b8e31c61"},{url:"/_next/static/chunks/app/(dashboard)/reff-types/layout-95259e60d5036a7a.js",revision:"95259e60d5036a7a"},{url:"/_next/static/chunks/app/(dashboard)/reff-types/page-5bad476f06f45a68.js",revision:"5bad476f06f45a68"},{url:"/_next/static/chunks/app/(dashboard)/reports/order-recap/page-ad867d6a7d904aeb.js",revision:"ad867d6a7d904aeb"},{url:"/_next/static/chunks/app/(dashboard)/sheet-groups/layout-95259e60d5036a7a.js",revision:"95259e60d5036a7a"},{url:"/_next/static/chunks/app/(dashboard)/sheet-groups/page-cd38be6d77eb531b.js",revision:"cd38be6d77eb531b"},{url:"/_next/static/chunks/app/(dashboard)/uoms/page-aa7371439c9dbac6.js",revision:"aa7371439c9dbac6"},{url:"/_next/static/chunks/app/(dashboard)/vendor-types/page-2f565cc13eb68342.js",revision:"2f565cc13eb68342"},{url:"/_next/static/chunks/app/(dashboard)/vendors/layout-95259e60d5036a7a.js",revision:"95259e60d5036a7a"},{url:"/_next/static/chunks/app/(dashboard)/vendors/page-f1c34f8df256b78e.js",revision:"f1c34f8df256b78e"},{url:"/_next/static/chunks/app/_global-error/page-95259e60d5036a7a.js",revision:"95259e60d5036a7a"},{url:"/_next/static/chunks/app/_not-found/page-bb3aaac7abe8095a.js",revision:"bb3aaac7abe8095a"},{url:"/_next/static/chunks/app/layout-2fb0c5165e5cfe99.js",revision:"2fb0c5165e5cfe99"},{url:"/_next/static/chunks/app/loading-95259e60d5036a7a.js",revision:"95259e60d5036a7a"},{url:"/_next/static/chunks/app/page-95259e60d5036a7a.js",revision:"95259e60d5036a7a"},{url:"/_next/static/chunks/bc98253f.30a207f26e2126c1.js",revision:"30a207f26e2126c1"},{url:"/_next/static/chunks/framework-ce757b396f77691a.js",revision:"ce757b396f77691a"},{url:"/_next/static/chunks/main-5abd301c372d3a5b.js",revision:"5abd301c372d3a5b"},{url:"/_next/static/chunks/main-app-fcc57b847c706255.js",revision:"fcc57b847c706255"},{url:"/_next/static/chunks/next/dist/client/components/builtin/app-error-95259e60d5036a7a.js",revision:"95259e60d5036a7a"},{url:"/_next/static/chunks/next/dist/client/components/builtin/forbidden-95259e60d5036a7a.js",revision:"95259e60d5036a7a"},{url:"/_next/static/chunks/next/dist/client/components/builtin/global-error-b28e6af5ddb589b9.js",revision:"b28e6af5ddb589b9"},{url:"/_next/static/chunks/next/dist/client/components/builtin/not-found-95259e60d5036a7a.js",revision:"95259e60d5036a7a"},{url:"/_next/static/chunks/next/dist/client/components/builtin/unauthorized-95259e60d5036a7a.js",revision:"95259e60d5036a7a"},{url:"/_next/static/chunks/polyfills-42372ed130431b0a.js",revision:"846118c33b2c0e922d7b3a7676f81f6f"},{url:"/_next/static/chunks/webpack-48bc779352011de6.js",revision:"48bc779352011de6"},{url:"/_next/static/css/1f55d774b82fb016.css",revision:"1f55d774b82fb016"},{url:"/_next/static/css/55cd2ee99e644d7e.css",revision:"55cd2ee99e644d7e"},{url:"/_next/static/media/material-icons-outlined.78a93b20.woff",revision:"78a93b20"},{url:"/_next/static/media/material-icons-outlined.f86cb7b0.woff2",revision:"f86cb7b0"},{url:"/_next/static/media/material-icons-round.92dc7ca2.woff",revision:"92dc7ca2"},{url:"/_next/static/media/material-icons-round.b10ec9db.woff2",revision:"b10ec9db"},{url:"/_next/static/media/material-icons-sharp.3885863e.woff2",revision:"3885863e"},{url:"/_next/static/media/material-icons-sharp.a71cb2bf.woff",revision:"a71cb2bf"},{url:"/_next/static/media/material-icons-two-tone.588d6313.woff",revision:"588d6313"},{url:"/_next/static/media/material-icons-two-tone.675bd578.woff2",revision:"675bd578"},{url:"/_next/static/media/material-icons.4ad034d2.woff",revision:"4ad034d2"},{url:"/_next/static/media/material-icons.59322316.woff2",revision:"59322316"},{url:"/favicon.ico",revision:"2274bebe02b1d51eb72fc1ae85279ff0"},{url:"/file.svg",revision:"d09f95206c3fa0bb9bd9fefabfd0ea71"},{url:"/globe.svg",revision:"2aaafa6a49b6563925fe440891e32717"},{url:"/logo.png",revision:"2274bebe02b1d51eb72fc1ae85279ff0"},{url:"/manifest.json",revision:"210962f6a24902d85963ae90866b5564"},{url:"/next.svg",revision:"8e061864f388b47f33a1c3780831193e"},{url:"/vercel.svg",revision:"c0af2f507b369b085b35ef4bbe3bcf1e"},{url:"/window.svg",revision:"a2760511c65806022ad20adf74370ff3"}],{ignoreURLParametersMatching:[]}),e.cleanupOutdatedCaches(),e.registerRoute("/",new e.NetworkFirst({cacheName:"start-url",plugins:[{cacheWillUpdate:async({request:e,response:a,event:s,state:t})=>a&&"opaqueredirect"===a.type?new Response(a.body,{status:200,statusText:"OK",headers:a.headers}):a}]}),"GET"),e.registerRoute(/^https:\/\/fonts\.(?:gstatic)\.com\/.*/i,new e.CacheFirst({cacheName:"google-fonts-webfonts",plugins:[new e.ExpirationPlugin({maxEntries:4,maxAgeSeconds:31536e3})]}),"GET"),e.registerRoute(/^https:\/\/fonts\.(?:googleapis)\.com\/.*/i,new e.StaleWhileRevalidate({cacheName:"google-fonts-stylesheets",plugins:[new e.ExpirationPlugin({maxEntries:4,maxAgeSeconds:604800})]}),"GET"),e.registerRoute(/\.(?:eot|otf|ttc|ttf|woff|woff2|font.css)$/i,new e.StaleWhileRevalidate({cacheName:"static-font-assets",plugins:[new e.ExpirationPlugin({maxEntries:4,maxAgeSeconds:604800})]}),"GET"),e.registerRoute(/\.(?:jpg|jpeg|gif|png|svg|ico|webp)$/i,new e.StaleWhileRevalidate({cacheName:"static-image-assets",plugins:[new e.ExpirationPlugin({maxEntries:64,maxAgeSeconds:86400})]}),"GET"),e.registerRoute(/\/_next\/image\?url=.+$/i,new e.StaleWhileRevalidate({cacheName:"next-image",plugins:[new e.ExpirationPlugin({maxEntries:64,maxAgeSeconds:86400})]}),"GET"),e.registerRoute(/\.(?:mp3|wav|ogg)$/i,new e.CacheFirst({cacheName:"static-audio-assets",plugins:[new e.RangeRequestsPlugin,new e.ExpirationPlugin({maxEntries:32,maxAgeSeconds:86400})]}),"GET"),e.registerRoute(/\.(?:mp4)$/i,new e.CacheFirst({cacheName:"static-video-assets",plugins:[new e.RangeRequestsPlugin,new e.ExpirationPlugin({maxEntries:32,maxAgeSeconds:86400})]}),"GET"),e.registerRoute(/\.(?:js)$/i,new e.StaleWhileRevalidate({cacheName:"static-js-assets",plugins:[new e.ExpirationPlugin({maxEntries:32,maxAgeSeconds:86400})]}),"GET"),e.registerRoute(/\.(?:css|less)$/i,new e.StaleWhileRevalidate({cacheName:"static-style-assets",plugins:[new e.ExpirationPlugin({maxEntries:32,maxAgeSeconds:86400})]}),"GET"),e.registerRoute(/\/_next\/data\/.+\/.+\.json$/i,new e.StaleWhileRevalidate({cacheName:"next-data",plugins:[new e.ExpirationPlugin({maxEntries:32,maxAgeSeconds:86400})]}),"GET"),e.registerRoute(/\.(?:json|xml|csv)$/i,new e.NetworkFirst({cacheName:"static-data-assets",plugins:[new e.ExpirationPlugin({maxEntries:32,maxAgeSeconds:86400})]}),"GET"),e.registerRoute(({url:e})=>{if(!(self.origin===e.origin))return!1;const a=e.pathname;return!a.startsWith("/api/auth/")&&!!a.startsWith("/api/")},new e.NetworkFirst({cacheName:"apis",networkTimeoutSeconds:10,plugins:[new e.ExpirationPlugin({maxEntries:16,maxAgeSeconds:86400})]}),"GET"),e.registerRoute(({url:e})=>{if(!(self.origin===e.origin))return!1;return!e.pathname.startsWith("/api/")},new e.NetworkFirst({cacheName:"others",networkTimeoutSeconds:10,plugins:[new e.ExpirationPlugin({maxEntries:32,maxAgeSeconds:86400})]}),"GET"),e.registerRoute(({url:e})=>!(self.origin===e.origin),new e.NetworkFirst({cacheName:"cross-origin",networkTimeoutSeconds:10,plugins:[new e.ExpirationPlugin({maxEntries:32,maxAgeSeconds:3600})]}),"GET")});
++if(!self.define){let e,a={};const s=(s,t)=>(s=new URL(s+".js",t).href,a[s]||new Promise(a=>{if("document"in self){const e=document.createElement("script");e.src=s,e.onload=a,document.head.appendChild(e)}else e=s,importScripts(s),a()}).then(()=>{let e=a[s];if(!e)throw new Error(`Module ${s} didn’t register its module`);return e}));self.define=(t,n)=>{const i=e||("document"in self?document.currentScript.src:"")||location.href;if(a[i])return;let c={};const r=e=>s(e,i),o={module:{uri:i},exports:c,require:r};a[i]=Promise.all(t.map(e=>o[e]||r(e))).then(e=>(n(...e),c))}}define(["./workbox-4754cb34"],function(e){"use strict";importScripts(),self.addEventListener("message",e=>{e.data&&"SKIP_WAITING"===e.data.type&&self.skipWaiting()}),e.clientsClaim(),e.precacheAndRoute([{url:"/_next/static/chunks/084914e6-d12c0aee2941f19d.js",revision:"d12c0aee2941f19d"},{url:"/_next/static/chunks/100057dd-bd82c8facd627fe8.js",revision:"bd82c8facd627fe8"},{url:"/_next/static/chunks/164f4fb6-0b8870136303aad8.js",revision:"0b8870136303aad8"},{url:"/_next/static/chunks/1755-a50b4067d81cb66f.js",revision:"a50b4067d81cb66f"},{url:"/_next/static/chunks/2170a4aa-5a8c4ef3e6af8b71.js",revision:"5a8c4ef3e6af8b71"},{url:"/_next/static/chunks/261-3f5aa267b1a209e7.js",revision:"3f5aa267b1a209e7"},{url:"/_next/static/chunks/2f0b94e8-6c6d1fd82de0e0c2.js",revision:"6c6d1fd82de0e0c2"},{url:"/_next/static/chunks/3050-ab4cbf6ce28ab58d.js",revision:"ab4cbf6ce28ab58d"},{url:"/_next/static/chunks/3224.9fa431b192e7a70f.js",revision:"9fa431b192e7a70f"},{url:"/_next/static/chunks/4254-907f369c6b6fe013.js",revision:"907f369c6b6fe013"},{url:"/_next/static/chunks/4990-52caec5d5177364d.js",revision:"52caec5d5177364d"},{url:"/_next/static/chunks/4bd1b696-7a9198eb45eb8b1c.js",revision:"7a9198eb45eb8b1c"},{url:"/_next/static/chunks/5134-6a987b2c0edc5f69.js",revision:"6a987b2c0edc5f69"},{url:"/_next/static/chunks/5455-469e9c6f32ece089.js",revision:"469e9c6f32ece089"},{url:"/_next/static/chunks/6987-f8c872ec911e4ced.js",revision:"f8c872ec911e4ced"},{url:"/_next/static/chunks/8031-c463cfb654386466.js",revision:"c463cfb654386466"},{url:"/_next/static/chunks/8245-1a72bc16e6b13404.js",revision:"1a72bc16e6b13404"},{url:"/_next/static/chunks/8511-4d46d8bcb94c217b.js",revision:"4d46d8bcb94c217b"},{url:"/_next/static/chunks/913.c4dab463e916e123.js",revision:"c4dab463e916e123"},{url:"/_next/static/chunks/9344-a5b2996a89c538bf.js",revision:"a5b2996a89c538bf"},{url:"/_next/static/chunks/9826-67e7e8d781d4aaa9.js",revision:"67e7e8d781d4aaa9"},{url:"/_next/static/chunks/9928-d84211d27880abf1.js",revision:"d84211d27880abf1"},{url:"/_next/static/chunks/ad2866b8.6b659644a7c0a401.js",revision:"6b659644a7c0a401"},{url:"/_next/static/chunks/app/(auth)/layout-95259e60d5036a7a.js",revision:"95259e60d5036a7a"},{url:"/_next/static/chunks/app/(auth)/login/page-0b5d4126af680f85.js",revision:"0b5d4126af680f85"},{url:"/_next/static/chunks/app/(auth)/register/page-64480e84f96b3b4b.js",revision:"64480e84f96b3b4b"},{url:"/_next/static/chunks/app/(dashboard)/contracts/%5Bid%5D/page-16633b61167f6e1a.js",revision:"16633b61167f6e1a"},{url:"/_next/static/chunks/app/(dashboard)/contracts/layout-95259e60d5036a7a.js",revision:"95259e60d5036a7a"},{url:"/_next/static/chunks/app/(dashboard)/contracts/new/page-e7ec13d989b76fa4.js",revision:"e7ec13d989b76fa4"},{url:"/_next/static/chunks/app/(dashboard)/contracts/page-7466a47c543156e2.js",revision:"7466a47c543156e2"},{url:"/_next/static/chunks/app/(dashboard)/dashboard/layout-95259e60d5036a7a.js",revision:"95259e60d5036a7a"},{url:"/_next/static/chunks/app/(dashboard)/dashboard/page-dc2deb0d4cdcd33a.js",revision:"dc2deb0d4cdcd33a"},{url:"/_next/static/chunks/app/(dashboard)/layout-b403a55228e6446b.js",revision:"b403a55228e6446b"},{url:"/_next/static/chunks/app/(dashboard)/orders/%5Bid%5D/page-553efb8c5a1346aa.js",revision:"553efb8c5a1346aa"},{url:"/_next/static/chunks/app/(dashboard)/orders/layout-95259e60d5036a7a.js",revision:"95259e60d5036a7a"},{url:"/_next/static/chunks/app/(dashboard)/orders/new/page-cf6cb027c03bb45b.js",revision:"cf6cb027c03bb45b"},{url:"/_next/static/chunks/app/(dashboard)/orders/page-e2e1a1e4fbf3c55d.js",revision:"e2e1a1e4fbf3c55d"},{url:"/_next/static/chunks/app/(dashboard)/projects/layout-95259e60d5036a7a.js",revision:"95259e60d5036a7a"},{url:"/_next/static/chunks/app/(dashboard)/projects/page-47026f36ae971b77.js",revision:"47026f36ae971b77"},{url:"/_next/static/chunks/app/(dashboard)/references/page-910d557a17f07cdc.js",revision:"910d557a17f07cdc"},{url:"/_next/static/chunks/app/(dashboard)/reff-types/layout-95259e60d5036a7a.js",revision:"95259e60d5036a7a"},{url:"/_next/static/chunks/app/(dashboard)/reff-types/page-1d3680309612380d.js",revision:"1d3680309612380d"},{url:"/_next/static/chunks/app/(dashboard)/reports/order-recap/page-ad867d6a7d904aeb.js",revision:"ad867d6a7d904aeb"},{url:"/_next/static/chunks/app/(dashboard)/sheet-groups/layout-95259e60d5036a7a.js",revision:"95259e60d5036a7a"},{url:"/_next/static/chunks/app/(dashboard)/sheet-groups/page-b9717ba57f34dece.js",revision:"b9717ba57f34dece"},{url:"/_next/static/chunks/app/(dashboard)/vendor-types/page-9f331ee9e61cf644.js",revision:"9f331ee9e61cf644"},{url:"/_next/static/chunks/app/(dashboard)/vendors/layout-95259e60d5036a7a.js",revision:"95259e60d5036a7a"},{url:"/_next/static/chunks/app/(dashboard)/vendors/page-2bb437a6d2beada1.js",revision:"2bb437a6d2beada1"},{url:"/_next/static/chunks/app/_global-error/page-95259e60d5036a7a.js",revision:"95259e60d5036a7a"},{url:"/_next/static/chunks/app/_not-found/page-bb3aaac7abe8095a.js",revision:"bb3aaac7abe8095a"},{url:"/_next/static/chunks/app/layout-2fb0c5165e5cfe99.js",revision:"2fb0c5165e5cfe99"},{url:"/_next/static/chunks/app/loading-95259e60d5036a7a.js",revision:"95259e60d5036a7a"},{url:"/_next/static/chunks/app/page-95259e60d5036a7a.js",revision:"95259e60d5036a7a"},{url:"/_next/static/chunks/bc98253f.30a207f26e2126c1.js",revision:"30a207f26e2126c1"},{url:"/_next/static/chunks/framework-ce757b396f77691a.js",revision:"ce757b396f77691a"},{url:"/_next/static/chunks/main-5abd301c372d3a5b.js",revision:"5abd301c372d3a5b"},{url:"/_next/static/chunks/main-app-fcc57b847c706255.js",revision:"fcc57b847c706255"},{url:"/_next/static/chunks/next/dist/client/components/builtin/app-error-95259e60d5036a7a.js",revision:"95259e60d5036a7a"},{url:"/_next/static/chunks/next/dist/client/components/builtin/forbidden-95259e60d5036a7a.js",revision:"95259e60d5036a7a"},{url:"/_next/static/chunks/next/dist/client/components/builtin/global-error-b28e6af5ddb589b9.js",revision:"b28e6af5ddb589b9"},{url:"/_next/static/chunks/next/dist/client/components/builtin/not-found-95259e60d5036a7a.js",revision:"95259e60d5036a7a"},{url:"/_next/static/chunks/next/dist/client/components/builtin/unauthorized-95259e60d5036a7a.js",revision:"95259e60d5036a7a"},{url:"/_next/static/chunks/polyfills-42372ed130431b0a.js",revision:"846118c33b2c0e922d7b3a7676f81f6f"},{url:"/_next/static/chunks/webpack-48bc779352011de6.js",revision:"48bc779352011de6"},{url:"/_next/static/css/55cd2ee99e644d7e.css",revision:"55cd2ee99e644d7e"},{url:"/_next/static/css/85b9396f294eb75b.css",revision:"85b9396f294eb75b"},{url:"/_next/static/mKPFn3oq8L4U6ZouT_UX6/_buildManifest.js",revision:"79ab74ad0ca552ef4a19849006ef6f6f"},{url:"/_next/static/mKPFn3oq8L4U6ZouT_UX6/_ssgManifest.js",revision:"b6652df95db52feb4daf4eca35380933"},{url:"/_next/static/media/material-icons-outlined.78a93b20.woff",revision:"78a93b20"},{url:"/_next/static/media/material-icons-outlined.f86cb7b0.woff2",revision:"f86cb7b0"},{url:"/_next/static/media/material-icons-round.92dc7ca2.woff",revision:"92dc7ca2"},{url:"/_next/static/media/material-icons-round.b10ec9db.woff2",revision:"b10ec9db"},{url:"/_next/static/media/material-icons-sharp.3885863e.woff2",revision:"3885863e"},{url:"/_next/static/media/material-icons-sharp.a71cb2bf.woff",revision:"a71cb2bf"},{url:"/_next/static/media/material-icons-two-tone.588d6313.woff",revision:"588d6313"},{url:"/_next/static/media/material-icons-two-tone.675bd578.woff2",revision:"675bd578"},{url:"/_next/static/media/material-icons.4ad034d2.woff",revision:"4ad034d2"},{url:"/_next/static/media/material-icons.59322316.woff2",revision:"59322316"},{url:"/favicon.ico",revision:"2274bebe02b1d51eb72fc1ae85279ff0"},{url:"/file.svg",revision:"d09f95206c3fa0bb9bd9fefabfd0ea71"},{url:"/globe.svg",revision:"2aaafa6a49b6563925fe440891e32717"},{url:"/logo.png",revision:"2274bebe02b1d51eb72fc1ae85279ff0"},{url:"/manifest.json",revision:"210962f6a24902d85963ae90866b5564"},{url:"/next.svg",revision:"8e061864f388b47f33a1c3780831193e"},{url:"/vercel.svg",revision:"c0af2f507b369b085b35ef4bbe3bcf1e"},{url:"/window.svg",revision:"a2760511c65806022ad20adf74370ff3"}],{ignoreURLParametersMatching:[]}),e.cleanupOutdatedCaches(),e.registerRoute("/",new e.NetworkFirst({cacheName:"start-url",plugins:[{cacheWillUpdate:async({request:e,response:a,event:s,state:t})=>a&&"opaqueredirect"===a.type?new Response(a.body,{status:200,statusText:"OK",headers:a.headers}):a}]}),"GET"),e.registerRoute(/^https:\/\/fonts\.(?:gstatic)\.com\/.*/i,new e.CacheFirst({cacheName:"google-fonts-webfonts",plugins:[new e.ExpirationPlugin({maxEntries:4,maxAgeSeconds:31536e3})]}),"GET"),e.registerRoute(/^https:\/\/fonts\.(?:googleapis)\.com\/.*/i,new e.StaleWhileRevalidate({cacheName:"google-fonts-stylesheets",plugins:[new e.ExpirationPlugin({maxEntries:4,maxAgeSeconds:604800})]}),"GET"),e.registerRoute(/\.(?:eot|otf|ttc|ttf|woff|woff2|font.css)$/i,new e.StaleWhileRevalidate({cacheName:"static-font-assets",plugins:[new e.ExpirationPlugin({maxEntries:4,maxAgeSeconds:604800})]}),"GET"),e.registerRoute(/\.(?:jpg|jpeg|gif|png|svg|ico|webp)$/i,new e.StaleWhileRevalidate({cacheName:"static-image-assets",plugins:[new e.ExpirationPlugin({maxEntries:64,maxAgeSeconds:86400})]}),"GET"),e.registerRoute(/\/_next\/image\?url=.+$/i,new e.StaleWhileRevalidate({cacheName:"next-image",plugins:[new e.ExpirationPlugin({maxEntries:64,maxAgeSeconds:86400})]}),"GET"),e.registerRoute(/\.(?:mp3|wav|ogg)$/i,new e.CacheFirst({cacheName:"static-audio-assets",plugins:[new e.RangeRequestsPlugin,new e.ExpirationPlugin({maxEntries:32,maxAgeSeconds:86400})]}),"GET"),e.registerRoute(/\.(?:mp4)$/i,new e.CacheFirst({cacheName:"static-video-assets",plugins:[new e.RangeRequestsPlugin,new e.ExpirationPlugin({maxEntries:32,maxAgeSeconds:86400})]}),"GET"),e.registerRoute(/\.(?:js)$/i,new e.StaleWhileRevalidate({cacheName:"static-js-assets",plugins:[new e.ExpirationPlugin({maxEntries:32,maxAgeSeconds:86400})]}),"GET"),e.registerRoute(/\.(?:css|less)$/i,new e.StaleWhileRevalidate({cacheName:"static-style-assets",plugins:[new e.ExpirationPlugin({maxEntries:32,maxAgeSeconds:86400})]}),"GET"),e.registerRoute(/\/_next\/data\/.+\/.+\.json$/i,new e.StaleWhileRevalidate({cacheName:"next-data",plugins:[new e.ExpirationPlugin({maxEntries:32,maxAgeSeconds:86400})]}),"GET"),e.registerRoute(/\.(?:json|xml|csv)$/i,new e.NetworkFirst({cacheName:"static-data-assets",plugins:[new e.ExpirationPlugin({maxEntries:32,maxAgeSeconds:86400})]}),"GET"),e.registerRoute(({url:e})=>{if(!(self.origin===e.origin))return!1;const a=e.pathname;return!a.startsWith("/api/auth/")&&!!a.startsWith("/api/")},new e.NetworkFirst({cacheName:"apis",networkTimeoutSeconds:10,plugins:[new e.ExpirationPlugin({maxEntries:16,maxAgeSeconds:86400})]}),"GET"),e.registerRoute(({url:e})=>{if(!(self.origin===e.origin))return!1;return!e.pathname.startsWith("/api/")},new e.NetworkFirst({cacheName:"others",networkTimeoutSeconds:10,plugins:[new e.ExpirationPlugin({maxEntries:32,maxAgeSeconds:86400})]}),"GET"),e.registerRoute(({url:e})=>!(self.origin===e.origin),new e.NetworkFirst({cacheName:"cross-origin",networkTimeoutSeconds:10,plugins:[new e.ExpirationPlugin({maxEntries:32,maxAgeSeconds:3600})]}),"GET")});
+diff --git a/appnextjs/src/app/(dashboard)/contracts/[id]/ContractDetailClient.tsx b/appnextjs/src/app/(dashboard)/contracts/[id]/ContractDetailClient.tsx
+index 73e13cd..81a6b0b 100644
+--- a/appnextjs/src/app/(dashboard)/contracts/[id]/ContractDetailClient.tsx
++++ b/appnextjs/src/app/(dashboard)/contracts/[id]/ContractDetailClient.tsx
+@@ -6,7 +6,7 @@ import { useContractStatuses } from '@/hooks/useContractStatuses';
+ import { useProject } from '@/hooks/useProjects';
+ import Button from '@/components/common/Button';
+ import ContractSheetTable from '@/components/features/contracts/ContractSheetTable';
+-import { useRef, useState, useMemo, useEffect, useCallback } from 'react';
++import { useRef, useState, useMemo, useCallback } from 'react';
+ import { useSheetGroupsByType } from '@/hooks/useSheetGroups';
+ import { ContractSheet } from '@/services/contractSheetService';
+ import { SheetGroup } from '@/services/sheetGroupService';
+@@ -37,18 +37,14 @@ export default function ContractDetailClient({
+   readOnlyInfo = false 
+ }: ContractDetailClientProps) {
+   const router = useRouter();
+-  const { data: contractData, isLoading: isContractLoading } = useContract(id);
++  const { isLoading: isContractLoading } = useContract(id);
+   const { data: workSheetGroupsData, isLoading: isWorkSheetGroupsLoading } = useSheetGroupsByType(0);
+   const { data: costSheetGroupsData, isLoading: isCostSheetGroupsLoading } = useSheetGroupsByType(1);
+   const { data: statusesData, isLoading: isStatusesLoading } = useContractStatuses();
+   const { updateContract: updateContractMutation, createContract: createContractMutation } = useContractMutations();
+   
+-  // Resolve contract data: prefer initialData (containing potential Step 1 edits) or fallback to fetched
+-  const fetchedContract = contractData?.data || contractData;
+-  const [contract, setContract] = useState<Partial<Contract> | null>(initialData || null);
+-
+   // Sync contract state with fetched data if not already initialized from initialData
+-  const [isContractInitialized, setIsContractInitialized] = useState(!!(initialData && Object.keys(initialData).length > 2));
++  const [contract, setContract] = useState<Partial<Contract> | null>(initialData || null);
+   
+   // No changes to effect order, but ensure we don't have loop
+ 
+@@ -79,7 +75,7 @@ export default function ContractDetailClient({
+     isOpen: boolean;
+     title: string;
+     message: string;
+-    variant: 'success' | 'error' | 'info';
++    variant: 'success' | 'error' | 'info' | 'warning';
+   }>({
+     isOpen: false,
+     title: '',
+@@ -105,20 +101,15 @@ export default function ContractDetailClient({
+ 
+ 
+   // Sync localSheets with API data if not already provided via initialData
+-  useEffect(() => {
+-    const sheetsFromContract = contract?.contract_sheets;
+-    if (sheetsFromContract && !hasInitialized) {
+-      setHasInitialized(true);
+-      setLocalSheets(sheetsFromContract);
+-    }
+-  }, [contract, hasInitialized]);
++  if (contract?.contract_sheets && !hasInitialized) {
++    setHasInitialized(true);
++    setLocalSheets(contract.contract_sheets);
++  }
+ 
+   // Initialize activeTabId when sheetGroups are loaded
+-  useEffect(() => {
+-    if (Array.isArray(sheetGroups) && sheetGroups.length > 0 && activeTabId === null) {
+-      setActiveTabId(sheetGroups[0].id);
+-    }
+-  }, [sheetGroups, activeTabId]);
++  if (Array.isArray(sheetGroups) && sheetGroups.length > 0 && activeTabId === null) {
++    setActiveTabId(sheetGroups[0].id);
++  }
+ 
+ 
+   // Sync current tab data to localSheets
+@@ -155,7 +146,7 @@ export default function ContractDetailClient({
+       .sort((a, b) => (a.sheet_seqno || 0) - (b.sheet_seqno || 0));
+   }, [localSheets, activeTabId]);
+ 
+-  const handleHeaderChange = (field: keyof Contract, value: any) => {
++  const handleHeaderChange = (field: keyof Contract, value: string | number | boolean | null) => {
+     setContract(prev => prev ? ({ ...prev, [field]: value }) : null);
+   };
+ 
+@@ -218,7 +209,7 @@ export default function ContractDetailClient({
+           isOpen: true,
+           title: 'Items In Use',
+           message: error?.response?.data?.message || 'Some items are in use and cannot be physically deleted. Would you like to mark them as inactive instead?',
+-          payload: { ...payload, force_soft_delete: true } as any
++          payload: { ...payload, force_soft_delete: true } as Partial<Contract> & { force_soft_delete: boolean }
+         });
+       } else {
+         console.error('Save failed', error);
+diff --git a/appnextjs/src/components/common/InfoDialog.tsx b/appnextjs/src/components/common/InfoDialog.tsx
+index 5e2f7ff..23d41e8 100644
+--- a/appnextjs/src/components/common/InfoDialog.tsx
++++ b/appnextjs/src/components/common/InfoDialog.tsx
+@@ -33,6 +33,12 @@ export default function InfoDialog({
+             <span className="material-icons text-red-600 dark:text-red-400">error</span>
+           </div>
+         );
++      case 'warning':
++        return (
++          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-yellow-100 dark:bg-yellow-900/30">
++            <span className="material-icons text-yellow-600 dark:text-yellow-400">warning</span>
++          </div>
++        );
+       case 'info':
+       default:
+         return (
+diff --git a/appnextjs/src/components/features/contracts/ContractSheetConfirmation.tsx b/appnextjs/src/components/features/contracts/ContractSheetConfirmation.tsx
+index 5f582ab..e58f2de 100644
+--- a/appnextjs/src/components/features/contracts/ContractSheetConfirmation.tsx
++++ b/appnextjs/src/components/features/contracts/ContractSheetConfirmation.tsx
+@@ -327,7 +327,7 @@ export default function ContractSheetConfirmation({ contract, onBack, onSave, is
+                     const hasErrors = (sheet.validation_errors?.length || 0) > 0;
+                     const isHeader = sheet.sheet_type === 0;
+                     const inUse = (sheet.ordersheets_count || 0) > 0;
+-                    const isActive = sheet.is_active !== 0;
++                    const isActive = sheet.is_active !== 0 || !sheet.id || typeof sheet.id === 'string';
+   
+                     return (
+                       <tr 
+@@ -347,7 +347,7 @@ export default function ContractSheetConfirmation({ contract, onBack, onSave, is
+                         <td className="px-4 py-2 whitespace-nowrap text-xs font-mono text-gray-400">
+                           {sheet.parent_code || ''}
+                         </td>
+-                        <td className={`px-4 py-2 whitespace-nowrap text-sm font-mono font-bold ${hasErrors ? 'text-red-600 dark:text-red-400' : (isActive ? 'text-gray-900 dark:text-white' : 'text-gray-400')} ${!isActive ? 'line-through' : ''}`}>
++                        <td className={`px-4 py-2 whitespace-nowrap text-sm font-mono font-bold ${hasErrors ? 'text-red-600 dark:text-red-400' : (isActive ? 'text-gray-900 dark:text-white' : 'text-gray-400')}`}>
+                           {sheet.sheet_code}
+                           {hasErrors && (
+                             <div className="mt-1 flex flex-col gap-1">
+@@ -359,7 +359,7 @@ export default function ContractSheetConfirmation({ contract, onBack, onSave, is
+                             </div>
+                           )}
+                         </td>
+-                        <td className={`px-4 py-2 text-sm ${isHeader ? 'font-black flex items-center gap-2' : ''} ${isActive ? (isHeader ? 'text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300') : 'text-gray-400 line-through'}`}>
++                        <td className={`px-4 py-2 text-sm ${isHeader ? 'font-black flex items-center gap-2' : ''} ${isActive ? (isHeader ? 'text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300') : 'text-gray-400'}`}>
+                           {sheet.sheet_name}
+                           {isHeader && (
+                             <span className="text-[9px] bg-primary/10 text-primary border border-primary/20 px-1.5 py-0.5 rounded font-black uppercase tracking-tighter">
+@@ -372,19 +372,19 @@ export default function ContractSheetConfirmation({ contract, onBack, onSave, is
+                             </span>
+                           )}
+                         </td>
+-                        <td className={`px-4 py-2 whitespace-nowrap text-sm text-right ${isActive ? 'text-gray-700 dark:text-gray-300' : 'text-gray-400 line-through'}`}>
++                        <td className={`px-4 py-2 whitespace-nowrap text-sm text-right ${isActive ? 'text-gray-700 dark:text-gray-300' : 'text-gray-400'}`}>
+                           {isHeader ? '-' : (sheet.sheet_qty || '0')}
+                         </td>
+-                        <td className={`px-4 py-2 whitespace-nowrap text-xs text-center ${isActive ? 'text-gray-500' : 'text-gray-400 line-through'}`}>
++                        <td className={`px-4 py-2 whitespace-nowrap text-xs text-center ${isActive ? 'text-gray-500' : 'text-gray-400'}`}>
+                           {isHeader ? '-' : (sheet.uom_code || '-')}
+                         </td>
+-                        <td className={`px-4 py-2 whitespace-nowrap text-sm text-right ${isActive ? 'text-gray-700 dark:text-gray-300' : 'text-gray-400 line-through'}`}>
++                        <td className={`px-4 py-2 whitespace-nowrap text-sm text-right ${isActive ? 'text-gray-700 dark:text-gray-300' : 'text-gray-400'}`}>
+                           {isHeader ? '-' : (sheet.sheet_price ? formatNumeric(sheet.sheet_price.toString()) : '0')}
+                         </td>
+-                        <td className={`px-4 py-2 whitespace-nowrap text-sm text-right font-bold ${isActive ? (isHeader ? 'text-gray-900 dark:text-white' : 'text-primary') : 'text-gray-400 line-through'}`}>
++                        <td className={`px-4 py-2 whitespace-nowrap text-sm text-right font-bold ${isActive ? (isHeader ? 'text-gray-900 dark:text-white' : 'text-primary') : 'text-gray-400'}`}>
+                           {formatNumeric(sheet.sheet_grossamt?.toString() || '0')}
+                         </td>
+-                        <td className={`px-4 py-2 whitespace-nowrap text-sm text-right font-bold ${isActive ? (isHeader ? 'text-gray-900 dark:text-white' : 'text-amber-600') : 'text-gray-400 line-through'}`}>
++                        <td className={`px-4 py-2 whitespace-nowrap text-sm text-right font-bold ${isActive ? (isHeader ? 'text-gray-900 dark:text-white' : 'text-amber-600') : 'text-gray-400'}`}>
+                           {formatNumeric(sheet.order_summary?.order_amount?.toString() || '0')}
+                         </td>
+                       </tr>
+diff --git a/appnextjs/src/components/features/contracts/ContractSheetTable.tsx b/appnextjs/src/components/features/contracts/ContractSheetTable.tsx
+index fdf5853..dcf09ca 100644
+--- a/appnextjs/src/components/features/contracts/ContractSheetTable.tsx
++++ b/appnextjs/src/components/features/contracts/ContractSheetTable.tsx
+@@ -248,7 +248,8 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
+     const allVisibleCols = [1, 2, 3, 4, 5, 6]; 
+ 
+     rawData.forEach((row: any, y: number) => {
+-      const isActive = row[8] === 0;
++      const hasRealId = row[0] && typeof row[0] === 'number';
++      const isInactive = row[8] === 0 && hasRealId;
+       const inUse = (row[9] || 0) > 0;
+       
+       allVisibleCols.forEach((x) => {
+@@ -259,7 +260,7 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
+         let color = isValid ? '' : 'red';
+         
+         // If inactive, use gray color
+-        if (isActive) color = '#9ca3af';
++        if (isInactive) color = '#9ca3af';
+ 
+         if (typeof instance.setStyle === 'function') {
+           const cellName = String.fromCharCode(65 + x) + (y + 1);
+@@ -272,13 +273,9 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
+              instance.setStyle(cellName, 'background-color', '');
+           }
+           
+-          // Strikethrough for inactive
+-          // Decoupled logic: Skip columns 1 (Code) and 2 (Description) as they handle it in their custom renderers
+-          if (isActive && x !== 1 && x !== 2) {
+-            instance.setStyle(cellName, 'text-decoration', 'line-through');
+-          } else {
+-            instance.setStyle(cellName, 'text-decoration', 'none');
+-          }
++          // Strikethrough for inactive - REMOVED per requirement
++          // Skip columns 1 (Code) and 2 (Description) as they handle it in their custom renderers
++          instance.setStyle(cellName, 'text-decoration', 'none');
+           
+           // Set Code column (x=1) as read-only if item is in use
+           if (x === 1 && inUse) {
+@@ -402,7 +399,8 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
+           if (!instance) return cell;
+           
+           const row = instance.getRowData(parseInt(y as string));
+-          const isActive = row[8] === 0;
++          const hasRealId = row[0] && typeof row[0] === 'number';
++          const isInactive = row[8] === 0 && hasRealId;
+           const inUse = (row[9] || 0) > 0;
+           const sheetType = (row[10] !== undefined && row[10] !== null) ? row[10] : 1;
+           const isHeader = sheetType === 0;
+@@ -416,8 +414,8 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
+           const text = document.createElement('span');
+           text.innerText = String(value || '');
+           text.className = 'truncate pr-2';
+-          if (isActive) {
+-            text.style.textDecoration = 'line-through';
++          if (isInactive) {
++            // text.style.textDecoration = 'line-through';
+           }
+           // Bold text for header rows
+           if (isHeader) {
+@@ -488,7 +486,7 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
+               if (inUse) {
+                 // In-use item -> Toggle only
+                 const toggleBtn = document.createElement('button');
+-                const toggleIcon = isActive ? 'toggle_off' : 'toggle_on';
++                const toggleIcon = isInactive ? 'toggle_off' : 'toggle_on';
+                 const toggleColor = '#f59e0b';
+                 
+                 toggleBtn.innerHTML = `<span class="material-icons-outlined" style="font-size: 18px; color: ${toggleColor};">${toggleIcon}</span>`;
+@@ -501,10 +499,10 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
+                 toggleBtn.style.border = '1px solid #f59e0b';
+                 toggleBtn.style.backgroundColor = 'transparent';
+                 toggleBtn.style.transition = 'all 0.2s';
+-                toggleBtn.title = isActive ? 'Inactive - Click to Activate' : 'Active - Click to Deactivate';
++                toggleBtn.title = isInactive ? 'Inactive - Click to Activate' : 'Active - Click to Deactivate';
+                 toggleBtn.onclick = (e) => {
+                   e.stopPropagation();
+-                  const newValue = isActive ? 1 : 0;
++                  const newValue = isInactive ? 1 : 0;
+                   instance.setValueFromCoords(8, parseInt(y as string), newValue, true);
+                   setTimeout(() => {
+                     validateTable(instance);
+@@ -594,8 +592,9 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
+           if (!instance) return cell;
+           
+           const row = instance.getRowData(parseInt(y as string));
+-          const isActive = row[7] === 0;
+-          const sheetType = (row[9] !== undefined && row[9] !== null) ? row[9] : 1;
++          const hasRealId = row[0] && typeof row[0] === 'number';
++          const isInactive = row[8] === 0 && hasRealId;
++          const sheetType = (row[10] !== undefined && row[10] !== null) ? row[10] : 1;
+           const isHeader = sheetType === 0;
+           
+           const wrapper = document.createElement('div');
+@@ -607,8 +606,8 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
+           const text = document.createElement('span');
+           text.innerText = String(value || '');
+           text.style.flex = '1';
+-          if (isActive) {
+-            text.style.textDecoration = 'line-through';
++          if (isInactive) {
++            // text.style.textDecoration = 'line-through';
+           }
+           // Bold text for header rows
+           if (isHeader) {
+@@ -635,7 +634,7 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
+           }
+           
+           // Add status badge
+-          if (isActive) {
++          if (isInactive) {
+             const badge = document.createElement('span');
+             badge.style.fontSize = '11px';
+             badge.style.fontWeight = '500';
+@@ -682,8 +681,9 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
+           if (!instance) return cell;
+           
+           const row = instance.getRowData(parseInt(y as string));
+-          const isActive = row[7] === 0;
+-          const sheetType = (row[9] !== undefined && row[9] !== null) ? row[9] : 1;
++          const hasRealId = row[0] && typeof row[0] === 'number';
++          const isInactive = row[8] === 0 && hasRealId;
++          const sheetType = (row[10] !== undefined && row[10] !== null) ? row[10] : 1;
+           const isHeader = sheetType === 0;
+           
+           // Formatting to match #,##0.00
+@@ -700,8 +700,8 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
+           
+           const text = document.createElement('span');
+           text.innerText = formatted;
+-          if (isActive) {
+-            text.style.textDecoration = 'line-through';
++          if (isInactive) {
++            // text.style.textDecoration = 'line-through';
+           }
+           // Bold text for header rows
+           if (isHeader) {
+@@ -727,7 +727,8 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
+           if (!instance) return cell;
+           
+           const row = instance.getRowData(parseInt(y as string));
+-          const isActive = row[8] === 0;
++          const hasRealId = row[0] && typeof row[0] === 'number';
++          const isInactive = row[8] === 0 && hasRealId;
+           const sheetType = (row[10] !== undefined && row[10] !== null) ? row[10] : 1;
+           const isHeader = sheetType === 0;
+           
+@@ -742,8 +743,8 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
+           wrapper.style.width = '100%';
+           wrapper.innerText = formatted;
+           
+-          if (isActive) {
+-            wrapper.style.textDecoration = 'line-through';
++          if (isInactive) {
++            // wrapper.style.textDecoration = 'line-through';
+             wrapper.style.color = '#9ca3af';
+           }
+           if (isHeader) {

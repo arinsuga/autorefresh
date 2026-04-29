@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: phpmyadmin
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: phpmyadmin
+  template:
+    metadata:
+      labels:
+        app: phpmyadmin
+    spec:
+      containers:
+        - name: phpmyadmin
+          image: sugaprivate/phpmyadmin:latest
+          ports:
+            - containerPort: 80
+          env:
+            - name: PMA_ABSOLUTE_URI
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: pma-absolute-uri
+            - name: PMA_HOST
+              valueFrom: 
+                configMapKeyRef:
+                  name: app-config
+                  key: db-host
+            - name: PMA_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: db-port
+            - name: PMA_USER
+              valueFrom:
+                secretKeyRef:
+                  name: app-secret
+                  key: db-username
+            - name: PMA_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secret
+                  key: db-password
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: phpmyadmin-service
+spec:
+  type: ClusterIP
+  selector:
+    app: phpmyadmin
+  ports:
+    - port: 80
+      targetPort: 80

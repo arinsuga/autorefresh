@@ -1,0 +1,3 @@
+FROM mariadb:10.11.14-ubi9
+
+EXPOSE 3306

@@ -1,0 +1,82 @@
+services:
+  authapi-service:
+    image: sugaprivate/authprod:latest
+    # container_name: authdev
+    environment:
+      APP_ENV: ${APP_ENV}
+      APP_URL: ${APP_URL}
+      DB_HOST: db
+      DB_PORT: ${DB_PORT}
+      DB_DATABASE: ${DB_DATABASE}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+    networks:
+      - auth_net
+    depends_on:
+      - db
+
+  appapi-service:
+    image: sugaprivate/appapidev:latest
+    environment:
+      APP_ENV: ${APP_ENV}
+      APP_URL: ${APP_URL}
+      DB_HOST: db
+      DB_PORT: ${DB_PORT}
+      DB_DATABASE: ${DB_DATABASE_APPAPI}
+      DB_USERNAME: ${DB_USERNAME_APPAPI}
+      DB_PASSWORD: ${DB_PASSWORD_APPAPI}
+    networks:
+      - auth_net
+    depends_on:
+      - db
+
+  nginx:
+    image: sugaprivate/nginx-compose:latest
+    container_name: nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - authapi-service
+    networks:
+      - auth_net
+
+  db:
+    image: sugaprivate/mariadb:latest
+    container_name: mysqldb
+    ports:
+      - "3306:3306"  # Accessible from outside and Kubernetes
+      # - "127.0.0.1:3306:${DB_PORT}"  # Host-only access
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - auth_net
+
+  phpmyadmin:
+    image: sugaprivate/phpmyadmin:latest
+    container_name: phpmyadmin
+    # Remove ports to prevent access from outside and
+    # set multi-host reverse proxy
+    # ports:
+    #   - "99:80"  # Access via http://localhost:99
+    environment:
+      PMA_HOST: db
+      PMA_PORT:  ${DB_PORT}
+      PMA_USER: ${DB_USERNAME}
+      PMA_PASSWORD: ${DB_PASSWORD}
+    networks:
+      - auth_net
+    depends_on:
+      - db
+
+volumes:
+  db_data:
+  phpmyadmin_data:
+
+networks:
+  auth_net:
+    driver: bridge
