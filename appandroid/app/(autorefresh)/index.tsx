@@ -68,15 +68,26 @@ export default function AutoRefreshDashboard() {
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         >
             <View style={styles.header}>
-                <Text style={[styles.welcome, { color: theme.text }]}>
-                    Welcome back,
-                </Text>
-                <Text style={styles.userName}>
-                    {authState?.user?.fullname || 'User'}
-                </Text>
-                <Text style={[styles.branchName, { color: theme.text }]}>
-                    Branch ID: {authState?.user?.branch_id}
-                </Text>
+                <View style={styles.userInfoContainer}>
+                    <View>
+                        <Text style={[styles.welcome, { color: theme.text }]}>
+                            Welcome back,
+                        </Text>
+                        <Text style={styles.userName}>
+                            {authState?.user?.fullname || 'User'}
+                        </Text>
+                    </View>
+                    <View style={styles.avatarPlaceholder}>
+                        <MaterialIcons name="account-circle" size={50} color={Colors.bgOrange} />
+                    </View>
+                </View>
+                
+                <View style={[styles.branchBadge, { backgroundColor: theme.card }]}>
+                    <MaterialIcons name="storefront" size={18} color={Colors.bgOrange} />
+                    <Text style={[styles.branchName, { color: theme.text }]}>
+                        {authState?.selectedBranch?.branch_name || 'No Branch Selected'}
+                    </Text>
+                </View>
             </View>
 
             <View style={styles.statsContainer}>
@@ -143,20 +154,50 @@ const styles = StyleSheet.create({
     },
     header: {
         padding: 20,
-        paddingTop: 40,
+        paddingTop: 50,
+        borderBottomLeftRadius: 30,
+        borderBottomRightRadius: 30,
+    },
+    userInfoContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 15,
+    },
+    avatarPlaceholder: {
+        width: 50,
+        height: 50,
+        borderRadius: 25,
+        backgroundColor: 'rgba(255, 152, 0, 0.1)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    branchBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        alignSelf: 'flex-start',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 20,
+        elevation: 2,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
     },
     welcome: {
-        fontSize: 16,
+        fontSize: 14,
+        opacity: 0.8,
     },
     userName: {
-        fontSize: 28,
+        fontSize: 24,
         fontWeight: 'bold',
         color: Colors.bgOrange,
     },
     branchName: {
-        fontSize: 14,
-        marginTop: 5,
-        opacity: 0.7,
+        fontSize: 13,
+        fontWeight: '600',
+        marginLeft: 6,
     },
     statsContainer: {
         padding: 15,

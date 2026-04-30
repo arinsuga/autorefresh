@@ -22,6 +22,9 @@ class AppUserTableSeeder extends Seeder
         DB::table("app_user")->insert([ "app_id" => 2, "user_id" => 3, "created_at" => null, "updated_at" => null ]); 
         DB::table("app_user")->insert([ "app_id" => 2, "user_id" => 4, "created_at" => null, "updated_at" => null ]); 
         DB::table("app_user")->insert([ "app_id" => 2, "user_id" => 5, "created_at" => null, "updated_at" => null ]); 
+
+        DB::table("app_user")->insert([ "app_id" => 2, "user_id" => 6, "created_at" => null, "updated_at" => null ]); 
+        DB::table("app_user")->insert([ "app_id" => 2, "user_id" => 7, "created_at" => null, "updated_at" => null ]); 
         
     }
 }

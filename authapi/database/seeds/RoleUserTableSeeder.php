@@ -24,5 +24,11 @@ class RoleUserTableSeeder extends Seeder
         DB::table("role_user")->insert([ "id" => 3, "app_id" => 2, "role_id" => 3, "user_id" => 3, "created_at" => null, "updated_at" => null, ]);
 
 
+        /** Additional Users - Autorefresh */
+        // arf-super : sa
+        DB::table("role_user")->insert([ "id" => 4, "app_id" => 2, "role_id" => 2, "user_id" => 6, "created_at" => null, "updated_at" => null, ]);
+        // arf-admin: admin
+        DB::table("role_user")->insert([ "id" => 5, "app_id" => 2, "role_id" => 3, "user_id" => 7, "created_at" => null, "updated_at" => null, ]);
+
     }
 }

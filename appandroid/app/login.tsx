@@ -27,28 +27,37 @@ import { IBranch } from "@/interfaces/IBranch";
 
 import { useRouter } from "expo-router";
 
-export default function Login({ authstate }: { authstate: IAuth | null | undefined }) {
-    const { Login } = useAuth();
+export default function Login() {
+    const { authState, Login: handleLogin, SetBranch } = useAuth();
     const router = useRouter();
     const [ username, setUsername ] = useState('');
     const [ password, setPassword ] = useState('');
     const [ selectedBranch, setSelectedBranch ] = useState<IBranch | null>(null);
     const [ isWaiting, setIsWaiting ] = useState(false);
     const [ displayLogo, setDisplayLogo ] = useState(true);
+    const [ step, setStep ] = useState(1); // 1: Credentials, 2: Branch Selection
   
+
     const onLogin = async (username: string, password: string) => {
       
-      if (!selectedBranch) {
-        alert('Please select a branch');
-        return;
-      }
-
       setIsWaiting(true);
-      const result = await (Login && Login(username, password, selectedBranch.id));
+      const result = await (handleLogin && handleLogin(username, password));
       setIsWaiting(false);
       
-      result ? router.replace('/') : alert('Invalid username or password');
+      if (result) {
+        setStep(2);
+      } else {
+        alert('Invalid username or password');
+      }
 
+    }
+
+    const onBranchSelect = (branch: IBranch) => {
+      setSelectedBranch(branch);
+      if (SetBranch) {
+        SetBranch(branch);
+        router.replace('/');
+      }
     }
 
     const usernamedOnChange = (nextText: string) => {
@@ -83,7 +92,7 @@ export default function Login({ authstate }: { authstate: IAuth | null | undefin
 
     return (
 
-      (authstate?.authenticated === undefined) ?
+      (authState?.authenticated === undefined) ?
       <SafeAreaView style={ [ Styles.activityContainer, { backgroundColor: Colors.whiteLight } ] }>
         <WaitingIndicator isWaiting={true} />
       </SafeAreaView> :
@@ -102,7 +111,7 @@ export default function Login({ authstate }: { authstate: IAuth | null | undefin
         </View> 
 
         <View style={{
-          display: authstate?.firstLogin ? 'none' : 'flex',
+          display: authState?.firstLogin ? 'none' : 'flex',
           flex: 1,
           alignItems: "center",
           position: 'absolute',
@@ -116,25 +125,44 @@ export default function Login({ authstate }: { authstate: IAuth | null | undefin
 
         <View style={ Styles.container }>
 
-          <BranchSelector 
-            onSelect={setSelectedBranch} 
-            selectedBranch={selectedBranch} 
-          />
-          <FieldUserName onChangeText={ usernamedOnChange } />
-          <FieldPassword onChangeText={ passwordOnChange } />
+          { step === 1 ? (
+            <>
+              <FieldUserName onChangeText={ usernamedOnChange } />
+              <FieldPassword onChangeText={ passwordOnChange } />
 
-          <View>
-
-            <TouchableOpacity
-                style={ [Styles.btn, Styles.btnLogin] }
-                onPress={ () => onLogin(username, password) }
-            >
-
-              <Text style={ Styles.btnText }>Login</Text>
-
-            </TouchableOpacity>
-
-          </View>
+              <View>
+                <TouchableOpacity
+                    style={ [Styles.btn, Styles.btnLogin] }
+                    onPress={ () => onLogin(username, password) }
+                >
+                  <Text style={ Styles.btnText }>Login</Text>
+                </TouchableOpacity>
+              </View>
+            </>
+          ) : (
+            <View style={{ width: '100%', paddingHorizontal: 20 }}>
+              <Text style={{ 
+                fontSize: 20, 
+                fontWeight: 'bold', 
+                color: Colors.bgOrange, 
+                textAlign: 'center',
+                marginBottom: 20 
+              }}>
+                Select Operating Branch
+              </Text>
+              <BranchSelector 
+                onSelect={onBranchSelect} 
+                selectedBranch={selectedBranch} 
+              />
+              <Text style={{ 
+                textAlign: 'center', 
+                color: Colors.grey, 
+                marginTop: 10 
+              }}>
+                Please select a branch to continue to the dashboard
+              </Text>
+            </View>
+          )}
         </View>
 
         <WaitingIndicator isWaiting={isWaiting} />

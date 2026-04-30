@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "autorefresh",
-    "slug": "autorefresh",
+    "name": "bsautorefresh",
+    "slug": "bsautorefresh",
     "version": "1.1.2",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -14,11 +14,11 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.arinsuga.autorefresh",
+      "bundleIdentifier": "com.arinsuga.bsautorefresh",
       "infoPlist": {
         "NSCameraUsageDescription": "$(PRODUCT_NAME) needs access to your Camera.",
         "NSMicrophoneUsageDescription": "$(PRODUCT_NAME) needs access to your Microphone.",
-        "NSLocationWhenInUseUsageDescription": "[autorefresh] needs your location."
+        "NSLocationWhenInUseUsageDescription": "[bsautorefresh] needs your location."
       }
     },
     "android": {
@@ -26,7 +26,7 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.arinsuga.autorefresh",
+      "package": "com.arinsuga.bsautorefresh",
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO",

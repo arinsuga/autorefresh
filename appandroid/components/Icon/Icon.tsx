@@ -133,6 +133,14 @@ export const IconUpdateLocation = ({size = defaultSize, color=defaultColor, styl
     return <MaterialIcons name="edit-location" size={size} color={color} style={style} />
 }
 
+export const IconEye = ({ size = defaultSize, color = defaultColor, style }: IconProps) => {
+    return <Ionicons name="eye" size={size} color={color} style={style} />
+}
+
+export const IconEyeOff = ({ size = defaultSize, color = defaultColor, style }: IconProps) => {
+    return <Ionicons name="eye-off" size={size} color={color} style={style} />
+}
+
 
 const Icon = {
     Home: IconHome,
@@ -161,7 +169,9 @@ const Icon = {
     Sync: IconSync,
     PDF: IconPDF,
     Share: IconShare,
-    UpdateLocation: IconUpdateLocation
+    UpdateLocation: IconUpdateLocation,
+    Eye: IconEye,
+    EyeOff: IconEyeOff
 }
 
 export default Icon

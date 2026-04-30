@@ -21,6 +21,9 @@ export const FieldUserName = ({onChangeText}: FieldUserNameProps) => {
             placeholderTextColor={ Colors.grey }
             secureTextEntry={ false }
             placeholder="Username"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoCorrect={false}
             style={ styles.textInput }
             onChangeText={ (nextText) => onChangeText(nextText) }
           ></TextInput>

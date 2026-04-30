@@ -14,6 +14,7 @@ import { interval, switchMap, from, takeWhile } from 'rxjs';
 
 //Interfaces
 import IAuth, { IUser } from '@/interfaces/IAuth';
+import { IBranch } from '@/interfaces/IBranch';
 
 //Services
 import {
@@ -31,6 +32,7 @@ interface IProvider {
     Logout?: () => Promise<any | null>;
     Register?: (email?: string, password?: string) => Promise<any | null>;
     Authenticate?: () => Promise<boolean>;
+    SetBranch?: (branch: IBranch) => void;
 }
 
 const Providercontext = createContext<IProvider>({});
@@ -104,7 +106,21 @@ const Authprovider = ({ children }: { children: ReactNode }) => {
 
         }
 
-        
+    }
+
+    const handleSetBranch = (branch: IBranch) => {
+        if (authdata) {
+            const newAuth = { 
+                ...authdata, 
+                selectedBranch: branch,
+                user: {
+                    ...authdata.user,
+                    branch_id: branch.id
+                }
+            };
+            setAuthdata(newAuth);
+            storeAuth(newAuth);
+        }
     }
 
     const loadAuth = async () => {
@@ -179,6 +195,7 @@ const Authprovider = ({ children }: { children: ReactNode }) => {
         Logout: handleLogout,
         Register: handleRegister,
         Authenticate: handleAuthantication,
+        SetBranch: handleSetBranch,
     };
 
     return (

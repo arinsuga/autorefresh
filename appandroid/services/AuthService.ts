@@ -13,7 +13,6 @@ import { IRole } from '@/interfaces/IAuth';
 import StorageKey from '@/constants/StorageKeys';
 import Tokens from '@/constants/Tokens'
 
-// const API_URL = `${process.env.EXPO_PUBLIC_API_URL}/auth`;
 const API_URL = `${process.env.EXPO_PUBLIC_AUTHAPIURL}/auth`;
 export const authSubject = new BehaviorSubject<IAuth | null>(null);
 export const authObservable = () => authSubject.asObservable();
@@ -58,6 +57,7 @@ export const initAuth = async (): Promise<IAuth | null> => {
     },
     authenticated: false,
     firstLogin: true,
+    selectedBranch: null,
   }
 }
 
@@ -116,6 +116,7 @@ export const getAuth = async (): Promise<IAuth | null> => {
       token: tokenInfo,
       authenticated: tokenInfo.status,
       firstLogin: tokenInfo.code === Tokens.status.expired.code ? false : auth.firstLogin,
+      selectedBranch: auth.selectedBranch || null,
     };
 
   } catch(e) {

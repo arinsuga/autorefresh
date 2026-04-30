@@ -8,7 +8,6 @@ import Icon from "@/components/Icon/Icon";
 import { useAuth } from "@/contexts/Authcontext";
 
 // Components
-import Login from "../login";
 import WaitingIndicator from "@/components/WaitingIndicator/WaitingIndicator";
 
 export default function AppLayout() {

@@ -1,3 +1,5 @@
+import { IBranch } from './IBranch';
+
 export interface IRole {
     code?: string;
     name?: string;
@@ -53,5 +55,6 @@ export default interface IAuth {
     jwt?: IJWT;
     authenticated?: boolean;
     firstLogin?: boolean;
+    selectedBranch?: IBranch | null;
 }
   

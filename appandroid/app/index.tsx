@@ -7,6 +7,10 @@ import { View } from 'react-native';
 export default function Index() {
     const { authState } = useAuth();
 
+    console.log('===== INDEX START =====');
+    console.log(authState);
+    console.log('===== INDEX END =====');
+
     // Still loading auth state
     if (authState?.authenticated === undefined) {
         return (
