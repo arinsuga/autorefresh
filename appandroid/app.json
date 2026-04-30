@@ -18,7 +18,7 @@
       "infoPlist": {
         "NSCameraUsageDescription": "$(PRODUCT_NAME) needs access to your Camera.",
         "NSMicrophoneUsageDescription": "$(PRODUCT_NAME) needs access to your Microphone.",
-        "NSLocationWhenInUseUsageDescription": "[bsautorefresh] needs your location."
+        "NSLocationWhenInUseUsageDescription": "[bsafresh] needs your location."
       }
     },
     "android": {
@@ -80,7 +80,7 @@
     },
     "extra": {
       "eas": {
-        "projectId": "fff0bdc0-6d92-4e3c-8ea5-f492742d6db5"
+        "projectId": "cdf225dd-c722-4e3c-b518-c99c7dd2987e"
       }
     },
     "owner": "sugaprivate"
