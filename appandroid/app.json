@@ -62,7 +62,7 @@
           "enableMicrophonePermission": true,
           "microphonePermissionText": "$(PRODUCT_NAME) needs access to your Microphone.",
           "enableLocation": true,
-          "locationPermissionText": "[checkpoint] needs your location."
+          "locationPermissionText": "[bsafresh] needs your location."
         }
       ],
       "expo-localization",
