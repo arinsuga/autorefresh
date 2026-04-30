@@ -10,7 +10,7 @@ import {
     KeyboardAvoidingView,
     Platform
 } from 'react-native';
-import { Stack, useRouter } from 'expo-router';
+import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import { Colors } from '@/constants/Colors';
 import { useAuth } from '@/contexts/Authcontext';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -30,7 +30,7 @@ import { cleanPlateNumber } from '@/utils/PlateUtils';
 import moment from 'moment';
 import { showMessage } from 'react-native-flash-message';
 
-export default function NewTransactionScreen() {
+export default function TransactionScreen() {
     const { authState } = useAuth();
     const { theme } = useTheme();
     const router = useRouter();
@@ -48,9 +48,14 @@ export default function NewTransactionScreen() {
     const [isOCRVisible, setIsOCRVisible] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    const { autoOpenScanner } = useLocalSearchParams();
+    
     useEffect(() => {
         fetchInitialData();
-    }, []);
+        if (autoOpenScanner === 'true') {
+            setIsOCRVisible(true);
+        }
+    }, [autoOpenScanner]);
 
     const fetchInitialData = async () => {
         try {

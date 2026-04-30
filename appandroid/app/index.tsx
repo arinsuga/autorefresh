@@ -25,12 +25,9 @@ export default function Index() {
         return <Redirect href="/login" />;
     }
 
-    // Authenticated - check if AutoRefresh or Checkpoint
-    // If user has a branch_id, they belong to AutoRefresh
-    if (authState.user?.branch_id) {
-        return <Redirect href="/(autorefresh)" />;
-    }
+    // Authenticated - goto AutoRefresh
+    return <Redirect href="/(autorefresh)" />;
 
-    // Fallback to Checkpoint
-    return <Redirect href="/(checkpoint)" />;
+    // return <Redirect href="/(checkpoint)" />;
+
 }

@@ -19,7 +19,7 @@ export const useTheme = () => useContext(ThemeContext);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const systemColorScheme = useColorScheme();
-    const [isDark, setIsDark] = useState(systemColorScheme === 'dark');
+    const [isDark, setIsDark] = useState(false);
 
     useEffect(() => {
         const loadTheme = async () => {
@@ -27,11 +27,12 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             if (savedTheme) {
                 setIsDark(savedTheme === 'dark');
             } else {
-                setIsDark(systemColorScheme === 'dark');
+                // Default to light mode regardless of system setting
+                setIsDark(false);
             }
         };
         loadTheme();
-    }, [systemColorScheme]);
+    }, []);
 
     const toggleTheme = async () => {
         const newIsDark = !isDark;

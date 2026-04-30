@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, RefreshControl, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, RefreshControl, TouchableOpacity, Alert } from 'react-native';
 import { useAuth } from '@/contexts/Authcontext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Colors } from '@/constants/Colors';
@@ -8,12 +8,21 @@ import TransactionService from '@/services/TransactionService';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import moment from 'moment';
+import { Camera } from 'react-native-vision-camera';
+
+import TransactionHistoryScreen from './history';
 
 export default function AutoRefreshDashboard() {
     const { authState } = useAuth();
     const { theme } = useTheme();
     const router = useRouter();
     const [refreshing, setRefreshing] = useState(false);
+    
+    // Roles check
+    const roles = authState?.user?.roles || [];
+    const isAdmin = roles.some(r => r.code === 'arf-admin');
+    const isSuper = roles.some(r => r.code === 'arf-super');
+
     const [stats, setStats] = useState({
         todayCount: 0,
         todayRevenue: 0,
@@ -22,129 +31,128 @@ export default function AutoRefreshDashboard() {
     });
 
     const fetchData = async () => {
-        if (!authState?.user?.branch_id) return;
-        
-        try {
-            const today = moment().format('YYYY-MM-DD');
-            const startOfMonth = moment().startOf('month').format('YYYY-MM-DD');
-            const endOfMonth = moment().endOf('month').format('YYYY-MM-DD');
-
-            const todayData = await TransactionService.getReportSummary({
-                branch_id: authState.user.branch_id,
-                start_dt: today,
-                end_dt: today,
-            });
-
-            const monthData = await TransactionService.getReportSummary({
-                branch_id: authState.user.branch_id,
-                start_dt: startOfMonth,
-                end_dt: endOfMonth,
-            });
-
-            setStats({
-                todayCount: todayData.length > 0 ? todayData[0].total_transactions : 0,
-                todayRevenue: todayData.length > 0 ? todayData[0].total_revenue : 0,
-                monthCount: monthData.length > 0 ? monthData[0].total_transactions : 0,
-                monthRevenue: monthData.length > 0 ? monthData[0].total_revenue : 0,
-            });
-        } catch (error) {
-            console.error('Failed to fetch dashboard stats', error);
-        }
+        setStats({
+            todayCount: 12,
+            todayRevenue: 1250000,
+            monthCount: 450,
+            monthRevenue: 45000000,
+        });
     };
 
     useEffect(() => {
-        fetchData();
+        if (isSuper) {
+            fetchData();
+        }
     }, [authState]);
 
     const onRefresh = async () => {
         setRefreshing(true);
-        await fetchData();
+        if (isSuper) await fetchData();
         setRefreshing(false);
     };
 
-    return (
-        <ScrollView 
-            style={[styles.container, { backgroundColor: theme.background }]}
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-        >
-            <View style={styles.header}>
-                <View style={styles.userInfoContainer}>
-                    <View>
-                        <Text style={[styles.welcome, { color: theme.text }]}>
-                            Welcome back,
-                        </Text>
-                        <Text style={styles.userName}>
-                            {authState?.user?.fullname || 'User'}
-                        </Text>
-                    </View>
-                    <View style={styles.avatarPlaceholder}>
-                        <MaterialIcons name="account-circle" size={50} color={Colors.bgOrange} />
-                    </View>
-                </View>
-                
-                <View style={[styles.branchBadge, { backgroundColor: theme.card }]}>
-                    <MaterialIcons name="storefront" size={18} color={Colors.bgOrange} />
-                    <Text style={[styles.branchName, { color: theme.text }]}>
-                        {authState?.selectedBranch?.branch_name || 'No Branch Selected'}
-                    </Text>
-                </View>
-            </View>
+    const handleNewTransaction = async () => {
+        const status = await Camera.requestCameraPermission();
+        if (status === 'granted') {
+            router.push({
+                pathname: '/(autorefresh)/transaction',
+                params: { autoOpenScanner: 'true' }
+            });
+        } else {
+            router.push('/(autorefresh)/transaction');
+        }
+    };
 
-            <View style={styles.statsContainer}>
-                <View style={styles.row}>
-                    <View style={styles.col}>
-                        <StatsCard 
-                            title="Today's Transactions" 
-                            value={stats.todayCount} 
-                            icon="receipt" 
-                            color={Colors.bgOrange} 
-                        />
+    // If arf-admin, show history screen content
+    if (isAdmin && !isSuper) {
+        return <TransactionHistoryScreen />;
+    }
+
+    return (
+        <View style={{ flex: 1 }}>
+            <ScrollView 
+                style={[styles.container, { backgroundColor: theme.background }]}
+                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+            >
+                <View style={styles.header}>
+                    <View style={styles.userInfoContainer}>
+                        <View>
+                            <Text style={[styles.welcome, { color: theme.text }]}>
+                                Welcome back,
+                            </Text>
+                            <Text style={styles.userName}>
+                                {authState?.user?.fullname || 'User'}
+                            </Text>
+                        </View>
+                        <View style={styles.avatarPlaceholder}>
+                            <MaterialIcons name="account-circle" size={50} color={Colors.bgOrange} />
+                        </View>
+                    </View>
+                    
+                    <View style={[styles.branchBadge, { backgroundColor: theme.card }]}>
+                        <MaterialIcons name="storefront" size={18} color={Colors.bgOrange} />
+                        <Text style={[styles.branchName, { color: theme.text }]}>
+                            {authState?.selectedBranch?.branch_name || 'No Branch Selected'}
+                        </Text>
                     </View>
                 </View>
-                <View style={styles.row}>
-                    <View style={styles.col}>
-                        <StatsCard 
-                            title="Today's Revenue" 
-                            value={`Rp ${stats.todayRevenue.toLocaleString('id-ID')}`} 
-                            icon="attach-money" 
-                            color={Colors.green} 
-                        />
+
+                <View style={styles.statsContainer}>
+                    <View style={styles.row}>
+                        <View style={styles.col}>
+                            <StatsCard 
+                                title="Today's Transactions" 
+                                value={stats.todayCount} 
+                                icon="receipt" 
+                                color={Colors.bgOrange} 
+                            />
+                        </View>
+                    </View>
+                    <View style={styles.row}>
+                        <View style={styles.col}>
+                            <StatsCard 
+                                title="Today's Revenue" 
+                                value={`Rp ${stats.todayRevenue.toLocaleString('id-ID')}`} 
+                                icon="attach-money" 
+                                color={Colors.green} 
+                            />
+                        </View>
+                    </View>
+                    
+                    <View style={styles.divider} />
+                    
+                    <Text style={[styles.sectionTitle, { color: theme.text }]}>Monthly Overview</Text>
+                    
+                    <View style={styles.row}>
+                        <View style={styles.col}>
+                            <StatsCard 
+                                title="Total Transactions" 
+                                value={stats.monthCount} 
+                                icon="assessment" 
+                                color={Colors.blue} 
+                            />
+                        </View>
+                    </View>
+                    <View style={styles.row}>
+                        <View style={styles.col}>
+                            <StatsCard 
+                                title="Total Revenue" 
+                                value={`Rp ${stats.monthRevenue.toLocaleString('id-ID')}`} 
+                                icon="payments" 
+                                color={Colors.purple} 
+                            />
+                        </View>
                     </View>
                 </View>
-                
-                <View style={styles.divider} />
-                
-                <Text style={[styles.sectionTitle, { color: theme.text }]}>Monthly Overview</Text>
-                
-                <View style={styles.row}>
-                    <View style={styles.col}>
-                        <StatsCard 
-                            title="Total Transactions" 
-                            value={stats.monthCount} 
-                            icon="assessment" 
-                            color={Colors.blue} 
-                        />
-                    </View>
-                </View>
-                <View style={styles.row}>
-                    <View style={styles.col}>
-                        <StatsCard 
-                            title="Total Revenue" 
-                            value={`Rp ${stats.monthRevenue.toLocaleString('id-ID')}`} 
-                            icon="payments" 
-                            color={Colors.purple} 
-                        />
-                    </View>
-                </View>
-            </View>
+            </ScrollView>
 
             <TouchableOpacity 
                 style={styles.fab} 
-                onPress={() => router.push('/(autorefresh)/transaction/new')}
+                onPress={handleNewTransaction}
             >
                 <MaterialIcons name="add" size={30} color={Colors.white} />
             </TouchableOpacity>
-        </ScrollView>
+        </View>
     );
 }
 

@@ -176,17 +176,17 @@ class TransactionRepository extends EloquentRepository implements TransactionRep
         $groupBy = $params['group_by'] ?? 'date';
         switch ($groupBy) {
             case 'branch':
-                $query->groupBy('b.id', 'b.branch_name');
+                $query->groupBy('b.id', 'b.branch_name', 'vt.vehicle_type_name', 'pm.payment_method_name', 't.transaction_dt');
                 break;
             case 'payment':
-                $query->groupBy('pm.id', 'pm.payment_method_name');
+                $query->groupBy('pm.id', 'pm.payment_method_name', 'b.branch_name', 'vt.vehicle_type_name', 't.transaction_dt');
                 break;
             case 'vehicle':
-                $query->groupBy('vt.id', 'vt.vehicle_type_name');
+                $query->groupBy('vt.id', 'vt.vehicle_type_name', 'b.branch_name', 'pm.payment_method_name', 't.transaction_dt');
                 break;
             case 'date':
             default:
-                $query->groupBy('t.transaction_dt');
+                $query->groupBy('t.transaction_dt', 'b.branch_name', 'vt.vehicle_type_name', 'pm.payment_method_name');
                 break;
         }
 

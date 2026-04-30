@@ -36,7 +36,7 @@ export default function ProfileScreen() {
                 <TouchableOpacity style={[styles.menuItem, { backgroundColor: theme.surface }]} onPress={toggleTheme}>
                     <View style={styles.menuLeft}>
                         <MaterialIcons 
-                            name={isDark ? "dark-mode" : "light-mode"} 
+                            name={isDark ? "brightness-2" : "wb-sunny"} 
                             size={24} 
                             color={Colors.bgOrange} 
                         />

@@ -24,6 +24,11 @@ const BranchSelector: React.FC<BranchSelectorProps> = ({ onSelect, selectedBranc
         try {
             const data = await BranchService.getActive();
             setBranches(data);
+            
+            // Set default selected branch if none is currently selected
+            if (data.length > 0 && !selectedBranch) {
+                onSelect(data[0]);
+            }
         } catch (error) {
             console.error('Failed to fetch branches', error);
         } finally {

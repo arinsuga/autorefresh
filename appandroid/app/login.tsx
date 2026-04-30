@@ -54,9 +54,14 @@ export default function Login() {
 
     const onBranchSelect = (branch: IBranch) => {
       setSelectedBranch(branch);
-      if (SetBranch) {
-        SetBranch(branch);
+    }
+
+    const handleContinue = () => {
+      if (selectedBranch && SetBranch) {
+        SetBranch(selectedBranch);
         router.replace('/');
+      } else {
+        alert('Please select a branch');
       }
     }
 
@@ -154,10 +159,20 @@ export default function Login() {
                 onSelect={onBranchSelect} 
                 selectedBranch={selectedBranch} 
               />
+
+              <View style={{ marginTop: 20 }}>
+                <TouchableOpacity
+                    style={ [Styles.btn, Styles.btnLogin] }
+                    onPress={ handleContinue }
+                >
+                  <Text style={ Styles.btnText }>Continue to Dashboard</Text>
+                </TouchableOpacity>
+              </View>
+
               <Text style={{ 
                 textAlign: 'center', 
                 color: Colors.grey, 
-                marginTop: 10 
+                marginTop: 20 
               }}>
                 Please select a branch to continue to the dashboard
               </Text>
