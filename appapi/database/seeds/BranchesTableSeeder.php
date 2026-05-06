@@ -14,8 +14,8 @@ class BranchesTableSeeder extends Seeder
         $branches = [
             [
                 'branch_code'      => 'BR-001',
-                'branch_name'      => 'AutoRefresh Main Branch',
-                'branch_address'   => 'Jl. Sudirman No. 1, Jakarta Pusat',
+                'branch_name'      => 'BSCSteam Pusat',
+                'branch_address'   => 'Cianjur',
                 'branch_phone'     => '021-1234567',
                 'branch_email'     => 'main@autorefresh.id',
                 'branch_logo'      => null,
@@ -27,8 +27,8 @@ class BranchesTableSeeder extends Seeder
             ],
             [
                 'branch_code'      => 'BR-002',
-                'branch_name'      => 'AutoRefresh Kuningan',
-                'branch_address'   => 'Jl. Kuningan Raya No. 25, Jakarta Selatan',
+                'branch_name'      => 'BSCSteam Cabang 1',
+                'branch_address'   => 'Depok',
                 'branch_phone'     => '021-7654321',
                 'branch_email'     => 'kuningan@autorefresh.id',
                 'branch_logo'      => null,
@@ -40,8 +40,8 @@ class BranchesTableSeeder extends Seeder
             ],
             [
                 'branch_code'      => 'BR-003',
-                'branch_name'      => 'AutoRefresh Kelapa Gading',
-                'branch_address'   => 'Jl. Kelapa Gading No. 10, Jakarta Utara',
+                'branch_name'      => 'BSCSteam Cabang 2',
+                'branch_address'   => 'Bogor',
                 'branch_phone'     => '021-4433221',
                 'branch_email'     => 'kelapagading@autorefresh.id',
                 'branch_logo'      => null,

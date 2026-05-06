@@ -18,122 +18,189 @@ class ServiceTypesTableSeeder extends Seeder
         $mpv = DB::table('vehicle_types')->where('vehicle_type_code', 'VT-MPV')->value('id');
         $pu  = DB::table('vehicle_types')->where('vehicle_type_code', 'VT-PU')->value('id');
 
+        //motor
+        $motor001 = DB::table('vehicle_types')->where('id', 1)->value('id');
+        $motor002 = DB::table('vehicle_types')->where('id', 2)->value('id');
+        $motor003 = DB::table('vehicle_types')->where('id', 3)->value('id');
+
+        //mobil
+        $mobil001 = DB::table('vehicle_types')->where('id', 4)->value('id');
+        $mobil002 = DB::table('vehicle_types')->where('id', 5)->value('id');
+        $mobil003 = DB::table('vehicle_types')->where('id', 6)->value('id');
+        $mobil004 = DB::table('vehicle_types')->where('id', 7)->value('id');
+        $mobil005 = DB::table('vehicle_types')->where('id', 8)->value('id');
+        $mobil006 = DB::table('vehicle_types')->where('id', 9)->value('id');
+
+        //Services
+        $service1 = 'Cuci Cepat';
+        $service2 = 'Cuci Full Service';
+
         $serviceTypes = [
             // Motorcycle services
             [
-                'vehicle_type_id'    => $mc,
-                'service_code'       => 'SVC-MC-EXT',
-                'service_name'       => 'Motor Exterior Wash',
+                'vehicle_type_id'    => $motor001,
+                'service_code'       => 'cuci-motor-001',
+                'service_name'       => $service2,
+                'service_price'      => 15000,
+                'service_description'=> "Motor ${service2}",
+                'is_active'          => 1,
+                'created_at'         => now(),
+                'updated_at'         => now(),
+            ],
+            [
+                'vehicle_type_id'    => $motor002,
+                'service_code'       => 'cuci-motor-002',
+                'service_name'       => $service2,
+                'service_price'      => 15000,
+                'service_description'=> "Motor ${service2}",
+                'is_active'          => 1,
+                'created_at'         => now(),
+                'updated_at'         => now(),
+            ],
+            [
+                'vehicle_type_id'    => $motor003,
+                'service_code'       => 'cuci-motor-003',
+                'service_name'       => $service2,
                 'service_price'      => 25000,
-                'service_description'=> 'Cuci eksterior sepeda motor',
+                'service_description'=> "Motor ${service2}",
+                'is_active'          => 1,
+                'created_at'         => now(),
+                'updated_at'         => now(),
+            ],
+
+
+            // Pickup
+            [
+                'vehicle_type_id'    => $mobil001,
+                'service_code'       => 'cuci-mobil-001',
+                'service_name'       => $service1,
+                'service_price'      => 25000,
+                'service_description'=> "Mobil ${service1}",
                 'is_active'          => 1,
                 'created_at'         => now(),
                 'updated_at'         => now(),
             ],
             [
-                'vehicle_type_id'    => $mc,
-                'service_code'       => 'SVC-MC-WAX',
-                'service_name'       => 'Motor Wax Polish',
+                'vehicle_type_id'    => $mobil001,
+                'service_code'       => 'cuci-mobil-002',
+                'service_name'       => $service2,
+                'service_price'      => 30000,
+                'service_description'=> "Mobil ${service2}",
+                'is_active'          => 1,
+                'created_at'         => now(),
+                'updated_at'         => now(),
+            ],
+
+            // Avanza dan Sejenisnya
+            [
+                'vehicle_type_id'    => $mobil002,
+                'service_code'       => 'cuci-mobil-003',
+                'service_name'       => $service1,
                 'service_price'      => 35000,
-                'service_description'=> 'Poles wax sepeda motor',
+                'service_description'=> "Mobil ${service1}",
                 'is_active'          => 1,
                 'created_at'         => now(),
                 'updated_at'         => now(),
             ],
-            // Sedan services
             [
-                'vehicle_type_id'    => $sd,
-                'service_code'       => 'SVC-SD-EXT',
-                'service_name'       => 'Sedan Exterior Wash',
+                'vehicle_type_id'    => $mobil002,
+                'service_code'       => 'cuci-mobil-004',
+                'service_name'       => $service2,
+                'service_price'      => 40000,
+                'service_description'=> "Mobil ${service2}",
+                'is_active'          => 1,
+                'created_at'         => now(),
+                'updated_at'         => now(),
+            ],
+
+            //Fortuner Pajero dan Sejenisnya
+            [
+                'vehicle_type_id'    => $mobil003,
+                'service_code'       => 'cuci-mobil-005',
+                'service_name'       => $service1,
+                'service_price'      => 40000,
+                'service_description'=> "Mobil ${service1}",
+                'is_active'          => 1,
+                'created_at'         => now(),
+                'updated_at'         => now(),
+            ],
+            [
+                'vehicle_type_id'    => $mobil003,
+                'service_code'       => 'cuci-mobil-006',
+                'service_name'       => $service2,
+                'service_price'      => 45000,
+                'service_description'=> "Mobil ${service2}",
+                'is_active'          => 1,
+                'created_at'         => now(),
+                'updated_at'         => now(),
+            ],
+
+            //Elf Hiace
+            [
+                'vehicle_type_id'    => $mobil004,
+                'service_code'       => 'cuci-mobil-007',
+                'service_name'       => $service1,
                 'service_price'      => 50000,
-                'service_description'=> 'Cuci eksterior sedan',
+                'service_description'=> "Mobil ${service1}",
                 'is_active'          => 1,
                 'created_at'         => now(),
                 'updated_at'         => now(),
             ],
             [
-                'vehicle_type_id'    => $sd,
-                'service_code'       => 'SVC-SD-INT',
-                'service_name'       => 'Sedan Interior Clean',
-                'service_price'      => 75000,
-                'service_description'=> 'Pembersihan interior sedan',
-                'is_active'          => 1,
-                'created_at'         => now(),
-                'updated_at'         => now(),
-            ],
-            [
-                'vehicle_type_id'    => $sd,
-                'service_code'       => 'SVC-SD-WAX',
-                'service_name'       => 'Sedan Wax Polish',
-                'service_price'      => 85000,
-                'service_description'=> 'Poles wax eksterior sedan',
-                'is_active'          => 1,
-                'created_at'         => now(),
-                'updated_at'         => now(),
-            ],
-            // SUV services
-            [
-                'vehicle_type_id'    => $suv,
-                'service_code'       => 'SVC-SUV-EXT',
-                'service_name'       => 'SUV Exterior Wash',
-                'service_price'      => 65000,
-                'service_description'=> 'Cuci eksterior SUV',
-                'is_active'          => 1,
-                'created_at'         => now(),
-                'updated_at'         => now(),
-            ],
-            [
-                'vehicle_type_id'    => $suv,
-                'service_code'       => 'SVC-SUV-INT',
-                'service_name'       => 'SUV Interior Clean',
-                'service_price'      => 100000,
-                'service_description'=> 'Pembersihan interior SUV',
-                'is_active'          => 1,
-                'created_at'         => now(),
-                'updated_at'         => now(),
-            ],
-            [
-                'vehicle_type_id'    => $suv,
-                'service_code'       => 'SVC-SUV-WAX',
-                'service_name'       => 'SUV Wax Polish',
-                'service_price'      => 110000,
-                'service_description'=> 'Poles wax eksterior SUV',
-                'is_active'          => 1,
-                'created_at'         => now(),
-                'updated_at'         => now(),
-            ],
-            // MPV services
-            [
-                'vehicle_type_id'    => $mpv,
-                'service_code'       => 'SVC-MPV-EXT',
-                'service_name'       => 'MPV Exterior Wash',
+                'vehicle_type_id'    => $mobil004,
+                'service_code'       => 'cuci-mobil-008',
+                'service_name'       => $service2,
                 'service_price'      => 60000,
-                'service_description'=> 'Cuci eksterior MPV/Minivan',
+                'service_description'=> "Mobil ${service2}",
+                'is_active'          => 1,
+                'created_at'         => now(),
+                'updated_at'         => now(),
+            ],
+
+            //Truck
+            [
+                'vehicle_type_id'    => $mobil005,
+                'service_code'       => 'cuci-mobil-009',
+                'service_name'       => $service1,
+                'service_price'      => 45000,
+                'service_description'=> "Mobil ${service1}",
                 'is_active'          => 1,
                 'created_at'         => now(),
                 'updated_at'         => now(),
             ],
             [
-                'vehicle_type_id'    => $mpv,
-                'service_code'       => 'SVC-MPV-INT',
-                'service_name'       => 'MPV Interior Clean',
-                'service_price'      => 90000,
-                'service_description'=> 'Pembersihan interior MPV',
+                'vehicle_type_id'    => $mobil005,
+                'service_code'       => 'cuci-mobil-010',
+                'service_name'       => $service2,
+                'service_price'      => 55000,
+                'service_description'=> "Mobil ${service2}",
                 'is_active'          => 1,
                 'created_at'         => now(),
                 'updated_at'         => now(),
             ],
-            // Pickup Truck services
+
+            //Angkot
             [
-                'vehicle_type_id'    => $pu,
-                'service_code'       => 'SVC-PU-EXT',
-                'service_name'       => 'Pickup Exterior Wash',
-                'service_price'      => 70000,
-                'service_description'=> 'Cuci eksterior pickup truck',
+                'vehicle_type_id'    => $mobil006,
+                'service_code'       => 'cuci-mobil-011',
+                'service_name'       => $service1,
+                'service_price'      => 15000,
+                'service_description'=> "Mobil ${service1}",
                 'is_active'          => 1,
                 'created_at'         => now(),
                 'updated_at'         => now(),
             ],
+            [
+                'vehicle_type_id'    => $mobil006,
+                'service_code'       => 'cuci-mobil-012',
+                'service_name'       => $service2,
+                'service_price'      => 20000,
+                'service_description'=> "Mobil ${service2}",
+                'is_active'          => 1,
+                'created_at'         => now(),
+                'updated_at'         => now(),
+            ],
+            
         ];
 
         DB::table('service_types')->insert($serviceTypes);

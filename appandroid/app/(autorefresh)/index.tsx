@@ -78,7 +78,7 @@ export default function AutoRefreshDashboard() {
                     <View style={styles.userInfoContainer}>
                         <View>
                             <Text style={[styles.welcome, { color: theme.text }]}>
-                                Welcome back,
+                                Selamat Datang,
                             </Text>
                             <Text style={styles.userName}>
                                 {authState?.user?.fullname || 'User'}
@@ -92,7 +92,7 @@ export default function AutoRefreshDashboard() {
                     <View style={[styles.branchBadge, { backgroundColor: theme.card }]}>
                         <MaterialIcons name="storefront" size={18} color={Colors.bgOrange} />
                         <Text style={[styles.branchName, { color: theme.text }]}>
-                            {authState?.selectedBranch?.branch_name || 'No Branch Selected'}
+                            {authState?.selectedBranch?.branch_name || 'Cabang Belum Dipilih'}
                         </Text>
                     </View>
                 </View>
@@ -101,7 +101,7 @@ export default function AutoRefreshDashboard() {
                     <View style={styles.row}>
                         <View style={styles.col}>
                             <StatsCard 
-                                title="Today's Transactions" 
+                                title="Transaksi Hari Ini" 
                                 value={stats.todayCount} 
                                 icon="receipt" 
                                 color={Colors.bgOrange} 
@@ -111,7 +111,7 @@ export default function AutoRefreshDashboard() {
                     <View style={styles.row}>
                         <View style={styles.col}>
                             <StatsCard 
-                                title="Today's Revenue" 
+                                title="Pendapatan Hari Ini" 
                                 value={`Rp ${stats.todayRevenue.toLocaleString('id-ID')}`} 
                                 icon="attach-money" 
                                 color={Colors.green} 
@@ -121,12 +121,12 @@ export default function AutoRefreshDashboard() {
                     
                     <View style={styles.divider} />
                     
-                    <Text style={[styles.sectionTitle, { color: theme.text }]}>Monthly Overview</Text>
+                    <Text style={[styles.sectionTitle, { color: theme.text }]}>Ringkasan Bulanan</Text>
                     
                     <View style={styles.row}>
                         <View style={styles.col}>
                             <StatsCard 
-                                title="Total Transactions" 
+                                title="Total Transaksi" 
                                 value={stats.monthCount} 
                                 icon="assessment" 
                                 color={Colors.blue} 

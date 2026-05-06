@@ -49,7 +49,7 @@ const BranchSelector: React.FC<BranchSelectorProps> = ({ onSelect, selectedBranc
             >
                 <MaterialIcons name="store" size={24} color={Colors.bgOrange} />
                 <Text style={[styles.text, !selectedBranch && styles.placeholder]}>
-                    {selectedBranch ? selectedBranch.branch_name : 'Select Branch'}
+                    {selectedBranch ? selectedBranch.branch_name : 'Pilih Cabang'}
                 </Text>
                 <MaterialIcons name="arrow-drop-down" size={24} color={Colors.grey} />
             </TouchableOpacity>

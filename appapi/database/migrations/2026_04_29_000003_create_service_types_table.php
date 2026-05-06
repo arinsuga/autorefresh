@@ -18,7 +18,7 @@ class CreateServiceTypesTable extends Migration
 
             $table->unsignedBigInteger('vehicle_type_id');
             $table->string('service_code')->unique();
-            $table->string('service_name')->unique();
+            $table->string('service_name');
             $table->decimal('service_price', 15, 2)->default(0);
             $table->text('service_description')->nullable();
             $table->boolean('is_active')->default(1); // 1=active, 0=inactive

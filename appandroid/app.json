@@ -1,9 +1,9 @@
 {
   "expo": {
-    "name": "bsafresh",
-    "slug": "bsafresh",
+    "name": "BSCSteam",
+    "slug": "BSCSteam",
     "version": "1.0.0",
-    "orientation": "portrait",
+    "orientation": "default",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
@@ -18,7 +18,7 @@
       "infoPlist": {
         "NSCameraUsageDescription": "$(PRODUCT_NAME) needs access to your Camera.",
         "NSMicrophoneUsageDescription": "$(PRODUCT_NAME) needs access to your Microphone.",
-        "NSLocationWhenInUseUsageDescription": "[bsafresh] needs your location."
+        "NSLocationWhenInUseUsageDescription": "[BSCSteam] needs your location."
       }
     },
     "android": {
@@ -62,7 +62,7 @@
           "enableMicrophonePermission": true,
           "microphonePermissionText": "$(PRODUCT_NAME) needs access to your Microphone.",
           "enableLocation": true,
-          "locationPermissionText": "[bsafresh] needs your location."
+          "locationPermissionText": "[BSCSteam] needs your location."
         }
       ],
       "expo-localization",

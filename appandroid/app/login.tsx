@@ -124,8 +124,8 @@ export default function Login() {
           alignSelf: "center",
           width: '100%'
         }}>
-          <Text> Authentication expired </Text>
-          <Text> Please login again </Text>
+          <Text> Autentikasi berakhir </Text>
+          <Text> Silahkan login kembali </Text>
         </View>
 
         <View style={ Styles.container }>
@@ -153,7 +153,7 @@ export default function Login() {
                 textAlign: 'center',
                 marginBottom: 20 
               }}>
-                Select Operating Branch
+                Pilih Cabang
               </Text>
               <BranchSelector 
                 onSelect={onBranchSelect} 
@@ -165,7 +165,7 @@ export default function Login() {
                     style={ [Styles.btn, Styles.btnLogin] }
                     onPress={ handleContinue }
                 >
-                  <Text style={ Styles.btnText }>Continue to Dashboard</Text>
+                  <Text style={ Styles.btnText }>Lanjut ke Dashboard</Text>
                 </TouchableOpacity>
               </View>
 
@@ -174,7 +174,7 @@ export default function Login() {
                 color: Colors.grey, 
                 marginTop: 20 
               }}>
-                Please select a branch to continue to the dashboard
+                Silahkan pilih cabang untuk lanjut ke dashboard
               </Text>
             </View>
           )}

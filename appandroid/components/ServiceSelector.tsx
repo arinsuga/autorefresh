@@ -37,7 +37,7 @@ const ServiceSelector: React.FC<ServiceSelectorProps> = ({ services, selectedSer
 
     return (
         <View style={styles.container}>
-            <Text style={styles.label}>Select Services</Text>
+            <Text style={styles.label}>Pilih Jasa Cuci</Text>
             <FlatList
                 data={services}
                 keyExtractor={(item) => item.id.toString()}

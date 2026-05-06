@@ -16,6 +16,7 @@ class CreateVehicleTypesTable extends Migration
         Schema::create('vehicle_types', function (Blueprint $table) {
             $table->bigIncrements('id');
 
+            $table->integer('vehicle_group_id')->default(1); // 1=motor 2=mobil
             $table->string('vehicle_type_code')->unique();
             $table->string('vehicle_type_name')->unique();
             $table->string('vehicle_type_description')->nullable();

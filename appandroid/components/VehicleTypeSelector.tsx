@@ -13,7 +13,7 @@ interface VehicleTypeSelectorProps {
 const VehicleTypeSelector: React.FC<VehicleTypeSelectorProps> = ({ types, selectedId, onSelect }) => {
     return (
         <View style={styles.container}>
-            <Text style={styles.label}>Vehicle Type</Text>
+            <Text style={styles.label}>Jenis Kendaraan</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
                 {types.map((type) => {
                     const isSelected = selectedId === type.id;

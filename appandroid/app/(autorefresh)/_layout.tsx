@@ -64,14 +64,14 @@ export default function AutoRefreshLayout() {
             <Tabs.Screen
                 name="index"
                 options={{
-                    title: 'Home',
+                    title: 'Beranda',
                     tabBarIcon: ({ color }) => <MaterialIcons name="home" size={28} color={color} />,
                 }}
             />
             <Tabs.Screen
                 name="history"
                 options={{
-                    title: 'History',
+                    title: 'Transaksi',
                     href: isAdmin && !isSuper ? null : undefined,
                     tabBarIcon: ({ color }) => <MaterialIcons name="history" size={28} color={color} />,
                 }}
@@ -79,7 +79,7 @@ export default function AutoRefreshLayout() {
             <Tabs.Screen
                 name="report"
                 options={{
-                    title: 'Report',
+                    title: 'Laporan',
                     href: isAdmin && !isSuper ? null : undefined,
                     tabBarIcon: ({ color }) => <MaterialIcons name="bar-chart" size={28} color={color} />,
                 }}
@@ -87,7 +87,7 @@ export default function AutoRefreshLayout() {
             <Tabs.Screen
                 name="profile"
                 options={{
-                    title: 'Profile',
+                    title: 'Profil Pengguna',
                     tabBarIcon: ({ color }) => <MaterialIcons name="person" size={28} color={color} />,
                 }}
             />

@@ -100,19 +100,19 @@ export default function TransactionScreen() {
 
     const handleSubmit = async () => {
         if (!plateNumber) {
-            Alert.alert('Error', 'Please enter plate number');
+            Alert.alert('Error', 'Masukkan Plat Nomor');
             return;
         }
         if (!selectedVehicleType) {
-            Alert.alert('Error', 'Please select vehicle type');
+            Alert.alert('Error', 'Pilih Jenis Kendaraan');
             return;
         }
         if (selectedServiceIds.length === 0) {
-            Alert.alert('Error', 'Please select at least one service');
+            Alert.alert('Error', 'Pilih Jasa Minimal 1');
             return;
         }
         if (!selectedPaymentMethodId) {
-            Alert.alert('Error', 'Please select payment method');
+            Alert.alert('Error', 'Pilih Metode Pembayaran');
             return;
         }
 
@@ -141,14 +141,14 @@ export default function TransactionScreen() {
             
             showMessage({
                 message: "Success",
-                description: "Transaction created successfully",
+                description: "Transaksi berhasil disimpan",
                 type: "success",
             });
             
             router.back();
         } catch (error) {
-            console.error('Failed to create transaction', error);
-            Alert.alert('Error', 'Failed to create transaction');
+            console.error('Gagal menyimpan transaksi', error);
+            Alert.alert('Error', 'Gagal menyimpan transaksi');
         } finally {
             setIsSubmitting(false);
         }
@@ -159,11 +159,11 @@ export default function TransactionScreen() {
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             style={{ flex: 1 }}
         >
-            <Stack.Screen options={{ title: 'New Transaction', headerShadowVisible: false }} />
+            <Stack.Screen options={{ title: 'Transaksi Baru', headerShadowVisible: false }} />
             
             <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
                 <View style={styles.formSection}>
-                    <Text style={styles.label}>Plate Number</Text>
+                    <Text style={styles.label}>Plat Nomor</Text>
                     <View style={styles.plateInputContainer}>
                         <TextInput
                             style={[styles.plateInput, { color: theme.text }]}
@@ -199,7 +199,7 @@ export default function TransactionScreen() {
                 </View>
 
                 <View style={styles.formSection}>
-                    <Text style={styles.label}>Payment Method</Text>
+                    <Text style={styles.label}>Metode Pembayaran</Text>
                     <View style={styles.paymentContainer}>
                         {paymentMethods.map(method => (
                             <TouchableOpacity 
@@ -223,7 +223,7 @@ export default function TransactionScreen() {
 
                 <View style={styles.summarySection}>
                     <View style={styles.summaryRow}>
-                        <Text style={styles.summaryLabel}>Total Amount</Text>
+                        <Text style={styles.summaryLabel}>Total Pembayaran</Text>
                         <Text style={styles.summaryValue}>
                             Rp {calculateTotal().toLocaleString('id-ID')}
                         </Text>
@@ -235,7 +235,7 @@ export default function TransactionScreen() {
                         disabled={isSubmitting}
                     >
                         <Text style={styles.submitText}>
-                            {isSubmitting ? 'SUBMITTING...' : 'CREATE TRANSACTION'}
+                            {isSubmitting ? 'Sedang Menyimpan...' : 'SIMPAN TRANSAKSI'}
                         </Text>
                     </TouchableOpacity>
                 </View>

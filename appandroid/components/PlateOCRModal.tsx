@@ -100,18 +100,18 @@ const PlateOCRModal: React.FC<PlateOCRModalProps> = ({ visible, onClose, onCaptu
                                 onChangeText={setCapturedPlate}
                                 autoFocus
                                 autoCapitalize="characters"
-                                placeholder="Enter plate number"
+                                placeholder="Input Plat Nomor"
                             />
                         </View>
                         <Text style={styles.editHint}>OCR result: {capturedPlate}</Text>
                         <Text style={styles.editHint}>Trimmed: {cleanPlateNumber(capturedPlate)}</Text>
                         
                         <TouchableOpacity style={styles.confirmButton} onPress={handleConfirm}>
-                            <Text style={styles.confirmText}>CONFIRM</Text>
+                            <Text style={styles.confirmText}>TERAPKAN</Text>
                         </TouchableOpacity>
                         
                         <TouchableOpacity style={styles.retryButton} onPress={() => setIsEditing(false)}>
-                            <Text style={styles.retryText}>Retake Photo</Text>
+                            <Text style={styles.retryText}>Photo Ulang</Text>
                         </TouchableOpacity>
                     </View>
                 )}

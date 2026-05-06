@@ -71,14 +71,14 @@ export default function ReportScreen() {
                 refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
             >
                 <View style={styles.header}>
-                    <Text style={[styles.title, { color: theme.text }]}>Report Center</Text>
+                    <Text style={[styles.title, { color: theme.text }]}>Pusat Laporan</Text>
                 </View>
 
                 <View style={styles.formContainer}>
                     <View style={styles.formGroup}>
-                        <Text style={styles.label}>Report Type</Text>
+                        <Text style={styles.label}>Jenis Laporan</Text>
                         <View style={styles.pickerContainer}>
-                            {['Summary', 'Detail'].map(t => (
+                            {['Ringkasan', 'Detail'].map(t => (
                                 <TouchableOpacity 
                                     key={t}
                                     style={[styles.typeButton, reportType === t && styles.activeTypeButton]}
@@ -92,7 +92,7 @@ export default function ReportScreen() {
 
                     <View style={styles.formRow}>
                         <View style={[styles.formGroup, { flex: 1, marginRight: 10 }]}>
-                            <Text style={styles.label}>From</Text>
+                            <Text style={styles.label}>Dari Tanggal</Text>
                             <TextInput 
                                 style={[styles.input, { color: theme.text }]} 
                                 value={dateFrom} 
@@ -100,7 +100,7 @@ export default function ReportScreen() {
                             />
                         </View>
                         <View style={[styles.formGroup, { flex: 1 }]}>
-                            <Text style={styles.label}>To</Text>
+                            <Text style={styles.label}>Sampai Tangal</Text>
                             <TextInput 
                                 style={[styles.input, { color: theme.text }]} 
                                 value={dateTo} 
@@ -110,12 +110,12 @@ export default function ReportScreen() {
                     </View>
 
                     <View style={styles.formGroup}>
-                        <Text style={styles.label}>Branch</Text>
+                        <Text style={styles.label}>Cabang</Text>
                         <TextInput style={[styles.input, { color: theme.text }]} value={branch} editable={false} />
                     </View>
 
                     <View style={styles.formGroup}>
-                        <Text style={styles.label}>Vehicle Type</Text>
+                        <Text style={styles.label}>Jenis Kendaraan</Text>
                         <TextInput style={[styles.input, { color: theme.text }]} value={vehicleType} editable={false} />
                     </View>
 
@@ -137,7 +137,7 @@ export default function ReportScreen() {
 
                 {showResults && (
                     <View style={styles.resultsContainer}>
-                        <Text style={[styles.sectionTitle, { color: theme.text }]}>Results</Text>
+                        <Text style={[styles.sectionTitle, { color: theme.text }]}>Hasil Laporan</Text>
                         {results.map((item, index) => (
                             <View key={index} style={[styles.reportCard, { backgroundColor: theme.surface }]}>
                                 <View style={styles.cardHeader}>
