@@ -9,8 +9,8 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import moment from 'moment';
 import { Camera } from 'react-native-vision-camera';
+import Roles from '@/constants/Roles';
 
-import TransactionHistoryScreen from './history';
 
 export default function AutoRefreshDashboard() {
     const { authState } = useAuth();
@@ -20,8 +20,8 @@ export default function AutoRefreshDashboard() {
     
     // Roles check
     const roles = authState?.user?.roles || [];
-    const isAdmin = roles.some(r => r.code === 'arf-admin');
-    const isSuper = roles.some(r => r.code === 'arf-super');
+    const isAdmin = roles.some(r => r.code === Roles.admin);
+    const isSuper = roles.some(r => r.code === Roles.super || r.code === Roles.master);
 
     const [stats, setStats] = useState({
         todayCount: 0,
@@ -31,13 +31,54 @@ export default function AutoRefreshDashboard() {
     });
 
     const fetchData = async () => {
-        setStats({
-            todayCount: 12,
-            todayRevenue: 1250000,
-            monthCount: 450,
-            monthRevenue: 45000000,
-        });
+        try {
+            const startOfMonth = moment().startOf('month').format('YYYY-MM-DD');
+            const endOfMonth = moment().endOf('month').format('YYYY-MM-DD');
+            const today = moment().format('YYYY-MM-DD');
+
+            const params = {
+                date_from: startOfMonth,
+                date_to: endOfMonth,
+                branch_id: authState?.selectedBranch?.id,
+            };
+
+            const data = await TransactionService.getReportSummary(params);
+            
+            let todayCount = 0;
+            let todayRevenue = 0;
+            let monthCount = 0;
+            let monthRevenue = 0;
+
+            data.forEach((item: any) => {
+                const itemDate = moment(item.transaction_dt).format('YYYY-MM-DD');
+                
+                // Add to month stats
+                monthCount += parseInt(item.total_transactions);
+                monthRevenue += parseFloat(item.total_net);
+
+                // Add to today stats if it matches
+                if (itemDate === today) {
+                    todayCount += parseInt(item.total_transactions);
+                    todayRevenue += parseFloat(item.total_net);
+                }
+            });
+
+            setStats({
+                todayCount,
+                todayRevenue,
+                monthCount,
+                monthRevenue,
+            });
+        } catch (error) {
+            console.error('Failed to fetch dashboard stats', error);
+        }
     };
+
+    useEffect(() => {
+        if (isAdmin && !isSuper) {
+            router.replace('/(autorefresh)/history');
+        }
+    }, [isAdmin, isSuper]);
 
     useEffect(() => {
         if (isSuper) {
@@ -63,10 +104,6 @@ export default function AutoRefreshDashboard() {
         }
     };
 
-    // If arf-admin, show history screen content
-    if (isAdmin && !isSuper) {
-        return <TransactionHistoryScreen />;
-    }
 
     return (
         <View style={{ flex: 1 }}>
@@ -97,53 +134,55 @@ export default function AutoRefreshDashboard() {
                     </View>
                 </View>
 
-                <View style={styles.statsContainer}>
-                    <View style={styles.row}>
-                        <View style={styles.col}>
-                            <StatsCard 
-                                title="Transaksi Hari Ini" 
-                                value={stats.todayCount} 
-                                icon="receipt" 
-                                color={Colors.bgOrange} 
-                            />
+                {isSuper && (
+                    <View style={styles.statsContainer}>
+                        <View style={styles.row}>
+                            <View style={styles.col}>
+                                <StatsCard 
+                                    title="Transaksi Hari Ini" 
+                                    value={stats.todayCount} 
+                                    icon="receipt" 
+                                    color={Colors.bgOrange} 
+                                />
+                            </View>
+                        </View>
+                        <View style={styles.row}>
+                            <View style={styles.col}>
+                                <StatsCard 
+                                    title="Pendapatan Hari Ini" 
+                                    value={`Rp ${stats.todayRevenue.toLocaleString('id-ID')}`} 
+                                    icon="attach-money" 
+                                    color={Colors.green} 
+                                />
+                            </View>
+                        </View>
+                        
+                        <View style={styles.divider} />
+                        
+                        <Text style={[styles.sectionTitle, { color: theme.text }]}>Ringkasan Bulanan</Text>
+                        
+                        <View style={styles.row}>
+                            <View style={styles.col}>
+                                <StatsCard 
+                                    title="Total Transaksi" 
+                                    value={stats.monthCount} 
+                                    icon="assessment" 
+                                    color={Colors.blue} 
+                                />
+                            </View>
+                        </View>
+                        <View style={styles.row}>
+                            <View style={styles.col}>
+                                <StatsCard 
+                                    title="Total Revenue" 
+                                    value={`Rp ${stats.monthRevenue.toLocaleString('id-ID')}`} 
+                                    icon="payments" 
+                                    color={Colors.purple} 
+                                />
+                            </View>
                         </View>
                     </View>
-                    <View style={styles.row}>
-                        <View style={styles.col}>
-                            <StatsCard 
-                                title="Pendapatan Hari Ini" 
-                                value={`Rp ${stats.todayRevenue.toLocaleString('id-ID')}`} 
-                                icon="attach-money" 
-                                color={Colors.green} 
-                            />
-                        </View>
-                    </View>
-                    
-                    <View style={styles.divider} />
-                    
-                    <Text style={[styles.sectionTitle, { color: theme.text }]}>Ringkasan Bulanan</Text>
-                    
-                    <View style={styles.row}>
-                        <View style={styles.col}>
-                            <StatsCard 
-                                title="Total Transaksi" 
-                                value={stats.monthCount} 
-                                icon="assessment" 
-                                color={Colors.blue} 
-                            />
-                        </View>
-                    </View>
-                    <View style={styles.row}>
-                        <View style={styles.col}>
-                            <StatsCard 
-                                title="Total Revenue" 
-                                value={`Rp ${stats.monthRevenue.toLocaleString('id-ID')}`} 
-                                icon="payments" 
-                                color={Colors.purple} 
-                            />
-                        </View>
-                    </View>
-                </View>
+                )}
             </ScrollView>
 
             <TouchableOpacity 

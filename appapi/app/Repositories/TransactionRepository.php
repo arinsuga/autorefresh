@@ -5,6 +5,7 @@ namespace App\Repositories;
 use App\Transaction;
 use App\Repositories\Contracts\TransactionRepositoryInterface;
 use App\Repositories\Data\EloquentRepository;
+use Illuminate\Support\Facades\DB;
 
 class TransactionRepository extends EloquentRepository implements TransactionRepositoryInterface
 {
@@ -145,19 +146,22 @@ class TransactionRepository extends EloquentRepository implements TransactionRep
      */
     public function getReportSummary($params)
     {
-        $query = \DB::table('transactions as t')
+        $query = DB::table('transactions as t')
             ->join('branches as b', 't.branch_id', '=', 'b.id')
             ->join('vehicle_types as vt', 't.vehicle_type_id', '=', 'vt.id')
             ->join('payment_methods as pm', 't.payment_method_id', '=', 'pm.id')
             ->select(
+                'b.id as branch_id',
                 'b.branch_name',
+                'vt.id as vehicle_type_id',
                 'vt.vehicle_type_name',
+                'pm.id as payment_method_id',
                 'pm.payment_method_name',
                 't.transaction_dt',
-                \DB::raw('COUNT(t.id) as total_transactions'),
-                \DB::raw('SUM(t.gross_total) as total_gross'),
-                \DB::raw('SUM(t.discount) as total_discount'),
-                \DB::raw('SUM(t.net_total) as total_net')
+                DB::raw('COUNT(t.id) as total_transactions'),
+                DB::raw('IFNULL(SUM(t.gross_total), 0) as total_gross'),
+                DB::raw('IFNULL(SUM(t.discount), 0) as total_discount'),
+                DB::raw('IFNULL(SUM(t.net_total), 0) as total_net')
             );
 
         if (!empty($params['branch_id'])) {
@@ -176,17 +180,17 @@ class TransactionRepository extends EloquentRepository implements TransactionRep
         $groupBy = $params['group_by'] ?? 'date';
         switch ($groupBy) {
             case 'branch':
-                $query->groupBy('b.id', 'b.branch_name', 'vt.vehicle_type_name', 'pm.payment_method_name', 't.transaction_dt');
+                $query->groupBy('b.id', 'b.branch_name', 'vt.id', 'vt.vehicle_type_name', 'pm.id', 'pm.payment_method_name', 't.transaction_dt');
                 break;
             case 'payment':
-                $query->groupBy('pm.id', 'pm.payment_method_name', 'b.branch_name', 'vt.vehicle_type_name', 't.transaction_dt');
+                $query->groupBy('pm.id', 'pm.payment_method_name', 'b.id', 'b.branch_name', 'vt.id', 'vt.vehicle_type_name', 't.transaction_dt');
                 break;
             case 'vehicle':
-                $query->groupBy('vt.id', 'vt.vehicle_type_name', 'b.branch_name', 'pm.payment_method_name', 't.transaction_dt');
+                $query->groupBy('vt.id', 'vt.vehicle_type_name', 'b.id', 'b.branch_name', 'pm.id', 'pm.payment_method_name', 't.transaction_dt');
                 break;
             case 'date':
             default:
-                $query->groupBy('t.transaction_dt', 'b.branch_name', 'vt.vehicle_type_name', 'pm.payment_method_name');
+                $query->groupBy('t.transaction_dt', 'b.id', 'b.branch_name', 'vt.id', 'vt.vehicle_type_name', 'pm.id', 'pm.payment_method_name');
                 break;
         }
 

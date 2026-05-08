@@ -88,4 +88,15 @@ class Transaction extends Model
     {
         return $this->hasMany('App\TransactionService', 'transaction_id');
     }
+
+    /**
+     * Get full URL for the transaction photo using Filex helper.
+     *
+     * @param  string  $value
+     * @return string
+     */
+    public function getTransactionPhotoAttribute($value)
+    {
+        return \Arins\Facades\Filex::image($value);
+    }
 }

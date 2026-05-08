@@ -35,4 +35,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+/appandroid/.expo
 /appandroid/android
+/appandroid/reff

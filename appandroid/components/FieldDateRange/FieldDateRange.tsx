@@ -29,79 +29,72 @@ export const FieldDateRange = ({label, currentValue, onChangeText}: FieldProps) 
   const [showDatePicker, setShowDatePicker] = useState(false);  
 
   const handleGetDate = () => {
-
     setShowDatePicker(true);
-    //setDateValue((prev) => prev.clone().add(1, 'days'));
-    
   }
 
-  return (
-      <>
-        <TouchableOpacity
-          style={{
-            marginBottom: 5,
-            flex: 0.4,
-            flexDirection: 'row',
-            justifyContent: "flex-end",
-            alignItems: "center",
-            borderBottomWidth: 1,
-            borderBottomColor: Colors.greyLight,
-            width: '70%',
-          }}
-          onPress={() => handleGetDate()}>
+  const formattedValue = moment(dateValue).isValid() 
+    ? moment(dateValue).format(Dates.format.date) 
+    : dateValue;
 
-                <View><Text>{ label } : </Text></View>
-                <View>
-                  <TextInput
-                    value={dateValue}
-                    placeholderTextColor={ Colors.grey }
-                    secureTextEntry={ false }
-                    placeholder= { Dates.format.date }
-                    style={ styles.textInput }
-                    onChangeText={ (nextText) => {
-                      setDateValue(nextText);
-                      onChangeText(nextText);
-                    } }
-                    editable={false}
-                  ></TextInput>
+  return (
+      <View style={styles.container}>
+        <TouchableOpacity
+          style={styles.touchable}
+          onPress={() => handleGetDate()}>
+                {label ? <View><Text style={styles.label}>{ label } : </Text></View> : null}
+                <View style={styles.inputWrapper}>
+                  <Text style={styles.textValue}>
+                    {formattedValue || Dates.format.date}
+                  </Text>
                 </View>
-                <View style={{
-                }}>
-                  <Icon.Date size={25} color={Colors.orange} />
+                <View>
+                  <Icon.Date size={22} color={Colors.bgOrange} />
                 </View>
         </TouchableOpacity>
 
         {
             showDatePicker &&
             <RNDateTimePicker
-              value={moment(dateValue, Dates.format.date).toDate()}
-              display="spinner"
+              value={moment(dateValue).isValid() ? moment(dateValue).toDate() : new Date()}
+              display="default"
               mode='date'
-              positiveButton={{ label: 'OK', textColor: Colors.white }}
-              negativeButton={{ label: 'Cancel', textColor: Colors.orange }}
               onChange={(event, selectedDate) => {
-                const selectedDateValue = moment(selectedDate).format(Dates.format.date);
-                setDateValue(selectedDateValue);
-                onChangeText(selectedDateValue);
                 setShowDatePicker(false);
+                if (selectedDate) {
+                  const selectedDateValue = moment(selectedDate).format(Dates.format.isoDate);
+                  setDateValue(selectedDateValue);
+                  onChangeText(selectedDateValue);
+                }
               }}
             />
         }
-        
-      </>
-
+      </View>
     );
 }
 
 export default FieldDateRange;
 
 const styles = StyleSheet.create({
-
-  
-  
-    textInput: {
-      fontSize: 15,
-      color: Colors.black,
+    container: {
+        width: '100%',
+        marginBottom: 10,
     },
-  
-  });
+    touchable: {
+        flexDirection: 'row',
+        alignItems: "center",
+        borderBottomWidth: 1,
+        borderBottomColor: Colors.greyLight,
+        paddingVertical: 8,
+    },
+    label: {
+        fontSize: 14,
+        color: Colors.grey,
+    },
+    inputWrapper: {
+        flex: 1,
+    },
+    textValue: {
+        fontSize: 15,
+        color: Colors.black,
+    },
+});

@@ -47,18 +47,17 @@ const Authprovider = ({ children }: { children: ReactNode }) => {
 
 
     const handleLogin = async (username?: string, password?: string, branch_id?: number) => {
-        let result = false;
 
         try {
             const auth = await login(username, password, branch_id);
             setAuthdata(auth);
-            result = true;
+            return auth;
 
         } catch (error) {
             console.log(error);
+            return null;
         }
 
-        return result;
     }
 
     const handleLogout = async () => {

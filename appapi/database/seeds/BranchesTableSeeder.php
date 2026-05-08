@@ -14,7 +14,7 @@ class BranchesTableSeeder extends Seeder
         $branches = [
             [
                 'branch_code'      => 'BR-001',
-                'branch_name'      => 'BSCSteam Pusat',
+                'branch_name'      => 'Pusat',
                 'branch_address'   => 'Cianjur',
                 'branch_phone'     => '021-1234567',
                 'branch_email'     => 'main@autorefresh.id',
@@ -27,7 +27,7 @@ class BranchesTableSeeder extends Seeder
             ],
             [
                 'branch_code'      => 'BR-002',
-                'branch_name'      => 'BSCSteam Cabang 1',
+                'branch_name'      => 'Cabang 1',
                 'branch_address'   => 'Depok',
                 'branch_phone'     => '021-7654321',
                 'branch_email'     => 'kuningan@autorefresh.id',
@@ -40,7 +40,7 @@ class BranchesTableSeeder extends Seeder
             ],
             [
                 'branch_code'      => 'BR-003',
-                'branch_name'      => 'BSCSteam Cabang 2',
+                'branch_name'      => 'Cabang 2',
                 'branch_address'   => 'Bogor',
                 'branch_phone'     => '021-4433221',
                 'branch_email'     => 'kelapagading@autorefresh.id',
@@ -53,6 +53,11 @@ class BranchesTableSeeder extends Seeder
             ],
         ];
 
-        DB::table('branches')->insert($branches);
+        foreach ($branches as $branch) {
+            DB::table('branches')->updateOrInsert(
+                ['branch_code' => $branch['branch_code']],
+                $branch
+            );
+        }
     }
 }

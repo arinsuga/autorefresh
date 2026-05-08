@@ -7,23 +7,36 @@ import { MaterialIcons } from '@expo/vector-icons';
 interface VehicleTypeSelectorProps {
     types: IVehicleType[];
     selectedId?: number;
-    onSelect: (type: IVehicleType) => void;
+    selectedIds?: number[];
+    multiple?: boolean;
+    onSelect: (id: number) => void;
+    onSelectType?: (type: IVehicleType) => void;
 }
 
-const VehicleTypeSelector: React.FC<VehicleTypeSelectorProps> = ({ types, selectedId, onSelect }) => {
+const VehicleTypeSelector: React.FC<VehicleTypeSelectorProps> = ({ 
+    types, 
+    selectedId, 
+    selectedIds = [], 
+    multiple = false, 
+    onSelect,
+    onSelectType
+}) => {
     return (
         <View style={styles.container}>
             <Text style={styles.label}>Jenis Kendaraan</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
                 {types.map((type) => {
-                    const isSelected = selectedId === type.id;
+                    const isSelected = multiple ? selectedIds.includes(type.id) : selectedId === type.id;
                     const iconName = type.vehicle_type_code.toLowerCase().includes('motor') ? 'motorcycle' : 'directions-car';
                     
                     return (
                         <TouchableOpacity 
                             key={type.id} 
                             style={[styles.typeButton, isSelected && styles.typeButtonSelected]}
-                            onPress={() => onSelect(type)}
+                            onPress={() => {
+                                onSelect(type.id);
+                                if (onSelectType) onSelectType(type);
+                            }}
                         >
                             <MaterialIcons 
                                 name={iconName} 

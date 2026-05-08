@@ -1,0 +1,17 @@
+node_modules/
+.expo/
+dist/
+docs/
+*-ori.json
+* copy.json
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+web-build/
+*.zip
+*.tar.gz
+*.md
+*.txt

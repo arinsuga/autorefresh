@@ -26,12 +26,13 @@ import BranchSelector from "@/components/BranchSelector";
 import { IBranch } from "@/interfaces/IBranch";
 
 import { useRouter } from "expo-router";
+import Roles from "@/constants/Roles";
 
 export default function Login() {
     const { authState, Login: handleLogin, SetBranch } = useAuth();
     const router = useRouter();
-    const [ username, setUsername ] = useState('');
-    const [ password, setPassword ] = useState('');
+    const [ username, setUsername ] = useState('owner@master.com');
+    const [ password, setPassword ] = useState('12345678');
     const [ selectedBranch, setSelectedBranch ] = useState<IBranch | null>(null);
     const [ isWaiting, setIsWaiting ] = useState(false);
     const [ displayLogo, setDisplayLogo ] = useState(true);
@@ -41,11 +42,18 @@ export default function Login() {
     const onLogin = async (username: string, password: string) => {
       
       setIsWaiting(true);
-      const result = await (handleLogin && handleLogin(username, password));
+      const auth = await (handleLogin && handleLogin(username, password));
       setIsWaiting(false);
       
-      if (result) {
-        setStep(2);
+      if (auth) {
+        const roles = auth.user?.roles || [];
+        const isSuperOrMaster = roles.some(r => r.code === Roles.super || r.code === Roles.master);
+        
+        if (isSuperOrMaster) {
+          router.replace('/');
+        } else {
+          setStep(2);
+        }
       } else {
         alert('Invalid username or password');
       }

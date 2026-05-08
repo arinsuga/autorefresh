@@ -135,6 +135,10 @@ export const login = async (username?: string, password?: string, branch_id?: nu
     await clearAuth();
     authSubject.next(null);
 
+    console.log("===== Authservice - login =====");
+    console.log(`${API_URL}/login`);
+    console.log(`username : ${username}, password : ${password}, branch_id : ${branch_id}`);
+
     const response = await axios.post(`${API_URL}/login`, { email: username, password, branch_id });
     const { token }: any = response.data;
 

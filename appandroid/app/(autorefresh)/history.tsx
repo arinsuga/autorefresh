@@ -16,42 +16,38 @@ export default function TransactionHistoryScreen() {
     const { theme } = useTheme();
     const router = useRouter();
     const [transactions, setTransactions] = useState<ITransaction[]>([]);
-    const [visibleTransactions, setVisibleTransactions] = useState<ITransaction[]>([]);
     const [refreshing, setRefreshing] = useState(false);
     const [selectedTransaction, setSelectedTransaction] = useState<ITransaction | null>(null);
     const [modalVisible, setModalVisible] = useState(false);
     const [page, setPage] = useState(1);
-    const pageSize = 5;
-    const maxItems = 20;
+    const [lastPage, setLastPage] = useState(1);
+    const pageSize = 15;
 
-    const generateDummyData = () => {
-        const dummy: ITransaction[] = [];
-        const plates = ['B 1234 ABC', 'D 5678 XYZ', 'B 9999 SS', 'F 4422 GHI', 'L 1000 OK'];
-        const customers = ['John Doe', 'Jane Smith', 'Alice Johnson', 'Bob Brown', 'Charlie Davis'];
-        
-        for (let i = 1; i <= maxItems; i++) {
-            dummy.push({
-                id: i,
-                transaction_number: `TRX-20260430-${i.toString().padStart(5, '0')}`,
-                transaction_dt: moment().subtract(i * 10, 'minutes').format('YYYY-MM-DD HH:mm:ss'),
-                plate_number: plates[i % plates.length],
-                gross_total: 50000 + (i * 5000),
-                discount: 0,
-                net_total: 50000 + (i * 5000),
-                vehicle_type_id: (i % 2) + 1,
-                payment_method_id: (i % 2) + 1,
-                branch_id: 1,
-                customer_name: customers[i % customers.length],
-            });
+    const fetchTransactions = async (pageNum: number = 1, shouldAppend: boolean = false) => {
+        try {
+            const params = {
+                page: pageNum,
+                per_page: pageSize,
+                branch_id: authState?.selectedBranch?.id,
+                date: moment().format('YYYY-MM-DD'),
+                sort_by: 'transaction_dt',
+                sort_order: 'desc'
+            };
+            
+            const response = await TransactionService.getAll(params);
+            const newData = response.data || [];
+            
+            if (shouldAppend) {
+                setTransactions(prev => [...prev, ...newData]);
+            } else {
+                setTransactions(newData);
+            }
+            
+            setPage(response.current_page);
+            setLastPage(response.last_page);
+        } catch (error) {
+            console.error('Failed to fetch transactions', error);
         }
-        return dummy;
-    };
-
-    const fetchTransactions = async () => {
-        const allDummy = generateDummyData();
-        setTransactions(allDummy);
-        setVisibleTransactions(allDummy.slice(0, pageSize));
-        setPage(1);
     };
 
     useEffect(() => {
@@ -59,11 +55,9 @@ export default function TransactionHistoryScreen() {
     }, [authState]);
 
     const loadMore = () => {
-        if (visibleTransactions.length >= transactions.length) return;
-        
-        const nextItems = transactions.slice(0, (page + 1) * pageSize);
-        setVisibleTransactions(nextItems);
-        setPage(page + 1);
+        if (page < lastPage && !refreshing) {
+            fetchTransactions(page + 1, true);
+        }
     };
 
     const onRefresh = async () => {
@@ -87,7 +81,7 @@ export default function TransactionHistoryScreen() {
     return (
         <View style={[styles.container, { backgroundColor: theme.background }]}>
             <FlatList
-                data={visibleTransactions}
+                data={transactions}
                 keyExtractor={(item) => item.id?.toString() || Math.random().toString()}
                 renderItem={({ item }) => (
                     <TransactionCard 
@@ -102,7 +96,7 @@ export default function TransactionHistoryScreen() {
                 ListEmptyComponent={() => (
                     <View style={styles.emptyContainer}>
                         <MaterialIcons name="history" size={60} color={Colors.grey} />
-                        <Text style={styles.emptyText}>No transactions found</Text>
+                        <Text style={styles.emptyText}>Tidak ada transaksi hari ini</Text>
                     </View>
                 )}
             />
@@ -120,7 +114,7 @@ export default function TransactionHistoryScreen() {
                     <TouchableOpacity onPress={() => setModalVisible(false)}>
                         <MaterialIcons name="arrow-back" size={28} color={theme.text} />
                     </TouchableOpacity>
-                    <Text style={[styles.modalTitle, { color: theme.text }]}>Transaction Detail</Text>
+                    <Text style={[styles.modalTitle, { color: theme.text }]}>Detail Transaksi</Text>
                     <TouchableOpacity onPress={() => {/* Print logic */}}>
                         <MaterialIcons name="print" size={28} color={Colors.bgOrange} />
                     </TouchableOpacity>

@@ -120,7 +120,7 @@ export default function TransactionScreen() {
         try {
             const total = calculateTotal();
             const transactionData: ITransaction = {
-                branch_id: authState?.user?.branch_id || 0,
+                branch_id: authState?.selectedBranch?.id || 0,
                 transaction_dt: moment().format('YYYY-MM-DD HH:mm:ss'),
                 plate_number: cleanPlateNumber(plateNumber),
                 vehicle_type_id: selectedVehicleType.id,
@@ -186,7 +186,8 @@ export default function TransactionScreen() {
                     <VehicleTypeSelector 
                         types={vehicleTypes} 
                         selectedId={selectedVehicleType?.id} 
-                        onSelect={handleVehicleTypeSelect} 
+                        onSelect={() => {}} // dummy for compatibility
+                        onSelectType={handleVehicleTypeSelect} 
                     />
                 </View>
 

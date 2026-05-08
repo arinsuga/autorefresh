@@ -14,7 +14,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.arinsuga.bsautorefresh",
+      "bundleIdentifier": "com.berkahsidiq.BSCSteam",
       "infoPlist": {
         "NSCameraUsageDescription": "$(PRODUCT_NAME) needs access to your Camera.",
         "NSMicrophoneUsageDescription": "$(PRODUCT_NAME) needs access to your Microphone.",
@@ -26,7 +26,7 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.arinsuga.bsautorefresh",
+      "package": "com.berkahsidiq.BSCSteam",
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO",
@@ -80,7 +80,7 @@
     },
     "extra": {
       "eas": {
-        "projectId": "cdf225dd-c722-4e3c-b518-c99c7dd2987e"
+        "projectId": "713bbca8-b1ca-44ef-b732-e7d113d81be3"
       }
     },
     "owner": "sugaprivate"

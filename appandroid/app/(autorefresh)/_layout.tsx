@@ -6,14 +6,15 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { TouchableOpacity, Alert } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/Authcontext';
+import Roles from '@/constants/Roles';
 
 export default function AutoRefreshLayout() {
     const { theme } = useTheme();
     const { Logout, authState } = useAuth();
     const router = useRouter();
     const roles = authState?.user?.roles || [];
-    const isAdmin = roles.some(r => r.code === 'arf-admin');
-    const isSuper = roles.some(r => r.code === 'arf-super');
+    const isAdmin = roles.some(r => r.code === Roles.admin);
+    const isSuper = roles.some(r => r.code === Roles.super || r.code === Roles.master);
 
     const handleLogout = () => {
         Alert.alert(
@@ -65,6 +66,7 @@ export default function AutoRefreshLayout() {
                 name="index"
                 options={{
                     title: 'Beranda',
+                    href: isSuper ? undefined : null,
                     tabBarIcon: ({ color }) => <MaterialIcons name="home" size={28} color={color} />,
                 }}
             />
@@ -72,16 +74,16 @@ export default function AutoRefreshLayout() {
                 name="history"
                 options={{
                     title: 'Transaksi',
-                    href: isAdmin && !isSuper ? null : undefined,
+                    href: isAdmin && !isSuper ? undefined : null,
                     tabBarIcon: ({ color }) => <MaterialIcons name="history" size={28} color={color} />,
                 }}
             />
             <Tabs.Screen
                 name="report"
                 options={{
-                    title: 'Laporan',
-                    href: isAdmin && !isSuper ? null : undefined,
-                    tabBarIcon: ({ color }) => <MaterialIcons name="bar-chart" size={28} color={color} />,
+                    title: 'Transaksi',
+                    href: isSuper ? undefined : null,
+                    tabBarIcon: ({ color }) => <MaterialIcons name="history" size={28} color={color} />,
                 }}
             />
             <Tabs.Screen

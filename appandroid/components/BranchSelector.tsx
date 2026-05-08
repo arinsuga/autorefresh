@@ -8,9 +8,10 @@ import { MaterialIcons } from '@expo/vector-icons';
 interface BranchSelectorProps {
     onSelect: (branch: IBranch) => void;
     selectedBranch?: IBranch | null;
+    allowAll?: boolean;
 }
 
-const BranchSelector: React.FC<BranchSelectorProps> = ({ onSelect, selectedBranch }) => {
+const BranchSelector: React.FC<BranchSelectorProps> = ({ onSelect, selectedBranch, allowAll = false }) => {
     const [branches, setBranches] = useState<IBranch[]>([]);
     const [modalVisible, setModalVisible] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -26,6 +27,7 @@ const BranchSelector: React.FC<BranchSelectorProps> = ({ onSelect, selectedBranc
             setBranches(data);
             
             // Set default selected branch if none is currently selected
+            // and we don't want "All" as default
             if (data.length > 0 && !selectedBranch) {
                 onSelect(data[0]);
             }
@@ -36,8 +38,8 @@ const BranchSelector: React.FC<BranchSelectorProps> = ({ onSelect, selectedBranc
         }
     };
 
-    const handleSelect = (branch: IBranch) => {
-        onSelect(branch);
+    const handleSelect = (branch: IBranch | null) => {
+        onSelect(branch as IBranch);
         setModalVisible(false);
     };
 
@@ -49,7 +51,7 @@ const BranchSelector: React.FC<BranchSelectorProps> = ({ onSelect, selectedBranc
             >
                 <MaterialIcons name="store" size={24} color={Colors.bgOrange} />
                 <Text style={[styles.text, !selectedBranch && styles.placeholder]}>
-                    {selectedBranch ? selectedBranch.branch_name : 'Pilih Cabang'}
+                    {selectedBranch ? selectedBranch.branch_name : (allowAll ? 'Semua Cabang' : 'Pilih Cabang')}
                 </Text>
                 <MaterialIcons name="arrow-drop-down" size={24} color={Colors.grey} />
             </TouchableOpacity>
@@ -70,12 +72,12 @@ const BranchSelector: React.FC<BranchSelectorProps> = ({ onSelect, selectedBranc
                         </View>
                         
                         <FlatList
-                            data={branches}
+                            data={allowAll ? [ { id: 0, branch_name: 'Semua Cabang', branch_code: 'ALL' } as IBranch, ...branches ] : branches}
                             keyExtractor={(item) => item.id.toString()}
                             renderItem={({ item }) => (
                                 <TouchableOpacity 
                                     style={styles.branchItem} 
-                                    onPress={() => handleSelect(item)}
+                                    onPress={() => handleSelect(item.id === 0 ? null : item)}
                                 >
                                     <Text style={styles.branchName}>{item.branch_name}</Text>
                                     <Text style={styles.branchCode}>{item.branch_code}</Text>
