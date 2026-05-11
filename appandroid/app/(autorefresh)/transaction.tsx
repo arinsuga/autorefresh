@@ -10,7 +10,8 @@ import {
     KeyboardAvoidingView,
     Platform
 } from 'react-native';
-import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
+import { Stack, useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
+import { useCallback } from 'react';
 import { Colors } from '@/constants/Colors';
 import { useAuth } from '@/contexts/Authcontext';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -43,19 +44,22 @@ export default function TransactionScreen() {
     // Form states
     const [plateNumber, setPlateNumber] = useState('');
     const [selectedVehicleType, setSelectedVehicleType] = useState<IVehicleType | null>(null);
-    const [selectedServiceIds, setSelectedServiceIds] = useState<number[]>([]);
+    const [selectedServiceId, setSelectedServiceId] = useState<number | null>(null);
     const [selectedPaymentMethodId, setSelectedPaymentMethodId] = useState<number | null>(null);
-    const [isOCRVisible, setIsOCRVisible] = useState(false);
+    const [isOCRVisible, setIsOCRVisible] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const { autoOpenScanner } = useLocalSearchParams();
     
+    useFocusEffect(
+        useCallback(() => {
+            setIsOCRVisible(true);
+        }, [])
+    );
+
     useEffect(() => {
         fetchInitialData();
-        if (autoOpenScanner === 'true') {
-            setIsOCRVisible(true);
-        }
-    }, [autoOpenScanner]);
+    }, []);
 
     const fetchInitialData = async () => {
         try {
@@ -77,7 +81,7 @@ export default function TransactionScreen() {
 
     const handleVehicleTypeSelect = async (type: IVehicleType) => {
         setSelectedVehicleType(type);
-        setSelectedServiceIds([]); // Reset services when type changes
+        setSelectedServiceId(null); // Reset service when type changes
         try {
             const sTypes = await ServiceTypeService.getByVehicleType(type.id);
             setServiceTypes(sTypes);
@@ -86,16 +90,10 @@ export default function TransactionScreen() {
         }
     };
 
-    const toggleService = (id: number) => {
-        setSelectedServiceIds(prev => 
-            prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
-        );
-    };
-
     const calculateTotal = () => {
-        return serviceTypes
-            .filter(s => selectedServiceIds.includes(s.id))
-            .reduce((sum, s) => sum + s.service_price, 0);
+        if (!selectedServiceId) return 0;
+        const service = serviceTypes.find(s => s.id === selectedServiceId);
+        return service ? service.service_price : 0;
     };
 
     const handleSubmit = async () => {
@@ -107,8 +105,8 @@ export default function TransactionScreen() {
             Alert.alert('Error', 'Pilih Jenis Kendaraan');
             return;
         }
-        if (selectedServiceIds.length === 0) {
-            Alert.alert('Error', 'Pilih Jasa Minimal 1');
+        if (!selectedServiceId) {
+            Alert.alert('Error', 'Pilih Jasa');
             return;
         }
         if (!selectedPaymentMethodId) {
@@ -119,6 +117,8 @@ export default function TransactionScreen() {
         setIsSubmitting(true);
         try {
             const total = calculateTotal();
+            const service = serviceTypes.find(s => s.id === selectedServiceId);
+            
             const transactionData: ITransaction = {
                 branch_id: authState?.selectedBranch?.id || 0,
                 transaction_dt: moment().format('YYYY-MM-DD HH:mm:ss'),
@@ -128,13 +128,12 @@ export default function TransactionScreen() {
                 gross_total: total,
                 discount: 0,
                 net_total: total,
-                services: selectedServiceIds.map(id => {
-                    const service = serviceTypes.find(s => s.id === id);
-                    return {
-                        service_type_id: id,
+                services: [
+                    {
+                        service_type_id: selectedServiceId,
                         service_price: service ? service.service_price : 0
-                    };
-                })
+                    }
+                ]
             };
 
             const result = await TransactionService.create(transactionData);
@@ -168,7 +167,7 @@ export default function TransactionScreen() {
                         <TextInput
                             style={[styles.plateInput, { color: theme.text }]}
                             value={plateNumber}
-                            onChangeText={setPlateNumber}
+                            onChangeText={(text) => setPlateNumber(cleanPlateNumber(text))}
                             placeholder="e.g. B 1234 ABC"
                             placeholderTextColor={Colors.grey}
                             autoCapitalize="characters"
@@ -180,6 +179,7 @@ export default function TransactionScreen() {
                             <MaterialIcons name="camera-alt" size={24} color={Colors.white} />
                         </TouchableOpacity>
                     </View>
+                    <Text style={styles.inputHint}>Dapat diedit jika hasil scan kurang akurat</Text>
                 </View>
 
                 <View style={styles.formSection}>
@@ -194,8 +194,8 @@ export default function TransactionScreen() {
                 <View style={styles.formSection}>
                     <ServiceSelector 
                         services={serviceTypes} 
-                        selectedServiceIds={selectedServiceIds} 
-                        onToggle={toggleService} 
+                        selectedServiceId={selectedServiceId} 
+                        onSelect={setSelectedServiceId} 
                     />
                 </View>
 
@@ -230,15 +230,25 @@ export default function TransactionScreen() {
                         </Text>
                     </View>
                     
-                    <TouchableOpacity 
-                        style={[styles.submitButton, isSubmitting && { opacity: 0.7 }]} 
-                        onPress={handleSubmit}
-                        disabled={isSubmitting}
-                    >
-                        <Text style={styles.submitText}>
-                            {isSubmitting ? 'Sedang Menyimpan...' : 'SIMPAN TRANSAKSI'}
-                        </Text>
-                    </TouchableOpacity>
+                    <View style={styles.buttonRow}>
+                        <TouchableOpacity 
+                            style={styles.cancelButton} 
+                            onPress={() => router.back()}
+                            disabled={isSubmitting}
+                        >
+                            <Text style={styles.cancelText}>BATAL</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity 
+                            style={[styles.submitButton, isSubmitting && { opacity: 0.7 }]} 
+                            onPress={handleSubmit}
+                            disabled={isSubmitting}
+                        >
+                            <Text style={styles.submitText}>
+                                {isSubmitting ? 'Simpan...' : 'SIMPAN'}
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
                 </View>
 
                 <View style={{ height: 40 }} />
@@ -294,6 +304,12 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
     },
+    inputHint: {
+        fontSize: 12,
+        color: Colors.grey,
+        marginTop: 5,
+        fontStyle: 'italic',
+    },
     paymentContainer: {
         flexDirection: 'row',
         flexWrap: 'wrap',
@@ -342,6 +358,7 @@ const styles = StyleSheet.create({
         color: Colors.bgOrange,
     },
     submitButton: {
+        flex: 2,
         backgroundColor: Colors.bgOrange,
         padding: 18,
         borderRadius: 12,
@@ -352,5 +369,23 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
         letterSpacing: 1,
+    },
+    buttonRow: {
+        flexDirection: 'row',
+        gap: 10,
+    },
+    cancelButton: {
+        flex: 1,
+        backgroundColor: Colors.white,
+        padding: 18,
+        borderRadius: 12,
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: Colors.greyDark,
+    },
+    cancelText: {
+        color: Colors.grey,
+        fontSize: 16,
+        fontWeight: 'bold',
     }
 });

@@ -1,10 +1,16 @@
 /**
- * Utility to clean plate number strings
- * Removes spaces from start, end, and middle
- * Converts to uppercase
+ * PlateUtils.ts
+ * Utility for handling Indonesian license plate strings.
+ * Enforces strict alphanumeric format without spaces or special characters.
  */
-export const cleanPlateNumber = (plate: string): string => {
-    if (!plate) return '';
-    // Remove all whitespace characters using regex
-    return plate.replace(/\s+/g, '').toUpperCase();
+
+export const cleanPlateNumber = (text: string): string => {
+    if (!text) return '';
+    // REMOVE EVERYTHING except letters and numbers (strips spaces, symbols, etc.)
+    return text.toUpperCase().replace(/[^A-Z0-9]/g, '');
+};
+
+export const formatPlateNumber = (text: string): string => {
+    // In this version, formatting means stripping all spaces and returning a continuous string
+    return cleanPlateNumber(text);
 };

@@ -31,6 +31,9 @@ export default function AutoRefreshDashboard() {
     });
 
     const fetchData = async () => {
+        // Temporarily disabled server fetching for OCR testing
+        return;
+        /*
         try {
             const startOfMonth = moment().startOf('month').format('YYYY-MM-DD');
             const endOfMonth = moment().endOf('month').format('YYYY-MM-DD');
@@ -72,6 +75,7 @@ export default function AutoRefreshDashboard() {
         } catch (error) {
             console.error('Failed to fetch dashboard stats', error);
         }
+        */
     };
 
     useEffect(() => {

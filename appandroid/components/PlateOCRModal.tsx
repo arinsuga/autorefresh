@@ -1,50 +1,161 @@
-import React, { useState, useRef } from 'react';
-import { View, Text, StyleSheet, Modal, TouchableOpacity, TextInput } from 'react-native';
+import React, { useState, useRef, useMemo } from 'react';
+import { View, Text, StyleSheet, Modal, TouchableOpacity, TextInput, Dimensions, Alert, Platform, ActivityIndicator, Animated, PanResponder } from 'react-native';
 import { Colors } from '@/constants/Colors';
 import { Camera, useCameraDevice } from 'react-native-vision-camera';
 import { MaterialIcons } from '@expo/vector-icons';
-import { cleanPlateNumber } from '@/utils/PlateUtils';
+import { cleanPlateNumber, formatPlateNumber } from '@/utils/PlateUtils';
+import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
+
+import TextRecognition from 'react-native-text-recognition';
+
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+const FRAME_WIDTH = SCREEN_WIDTH * 0.8;
+const FRAME_HEIGHT = 150;
 
 interface PlateOCRModalProps {
     visible: boolean;
     onClose: () => void;
-    onCapture: (plate: string) => void;
+    onCapture: (plate: string, imagePath?: string) => void;
 }
 
 const PlateOCRModal: React.FC<PlateOCRModalProps> = ({ visible, onClose, onCapture }) => {
     const device = useCameraDevice('back');
     const cameraRef = useRef<Camera>(null);
     const [capturedPlate, setCapturedPlate] = useState('');
+    const [capturedImagePath, setCapturedImagePath] = useState('');
+    const [detectedPlate, setDetectedPlate] = useState('');
     const [isEditing, setIsEditing] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
+    const [processingStep, setProcessingStep] = useState<'none' | 'capturing' | 'recognizing'>('none');
+    
+    // Movable & Resizable frame state
+    const [frameWidth, setFrameWidth] = useState(SCREEN_WIDTH * 0.8);
+    const [frameHeight, setFrameHeight] = useState(120);
+    const [currentFrameY, setCurrentFrameY] = useState((SCREEN_HEIGHT - 120) / 2);
+    const [currentFrameX, setCurrentFrameX] = useState((SCREEN_WIDTH - (SCREEN_WIDTH * 0.8)) / 2);
+
+    // PanResponder for Moving
+    const moveResponder = useMemo(() => PanResponder.create({
+        onStartShouldSetPanResponder: () => true,
+        onMoveShouldSetPanResponder: () => true,
+        onPanResponderMove: (_, gestureState) => {
+            const newY = currentFrameY + gestureState.dy;
+            const newX = currentFrameX + gestureState.dx;
+            if (newY > 50 && newY < SCREEN_HEIGHT - frameHeight - 100) setCurrentFrameY(newY);
+            if (newX > 10 && newX < SCREEN_WIDTH - frameWidth - 10) setCurrentFrameX(newX);
+        },
+        onPanResponderRelease: (_, gestureState) => {
+            setCurrentFrameY(prev => Math.max(50, Math.min(prev + gestureState.dy, SCREEN_HEIGHT - frameHeight - 100)));
+            setCurrentFrameX(prev => Math.max(10, Math.min(prev + gestureState.dx, SCREEN_WIDTH - frameWidth - 10)));
+        },
+    }), [currentFrameY, currentFrameX, frameWidth, frameHeight]);
+
+    // PanResponder for Resizing
+    const resizeResponder = useMemo(() => PanResponder.create({
+        onStartShouldSetPanResponder: () => true,
+        onMoveShouldSetPanResponder: () => true,
+        onPanResponderMove: (_, gestureState) => {
+            const newW = frameWidth + gestureState.dx;
+            const newH = frameHeight + gestureState.dy;
+            if (newW > 150 && newW < SCREEN_WIDTH - currentFrameX - 10) setFrameWidth(newW);
+            if (newH > 80 && newH < SCREEN_HEIGHT - currentFrameY - 150) setFrameHeight(newH);
+        },
+        onPanResponderRelease: (_, gestureState) => {
+            setFrameWidth(prev => Math.max(150, Math.min(prev + gestureState.dx, SCREEN_WIDTH - currentFrameX - 10)));
+            setFrameHeight(prev => Math.max(80, Math.min(prev + gestureState.dy, SCREEN_HEIGHT - currentFrameY - 150)));
+        },
+    }), [frameWidth, frameHeight, currentFrameX, currentFrameY]);
+
+    const isBusy = useRef(false);
+    const isModalVisible = useRef(visible);
+
+    React.useEffect(() => {
+        isModalVisible.current = visible;
+        if (!visible) {
+            setDetectedPlate('');
+            setCapturedPlate('');
+            setCapturedImagePath('');
+            setIsEditing(false);
+            setIsProcessing(false);
+            setProcessingStep('none');
+            isBusy.current = false;
+        }
+    }, [visible]);
+
+    const processPhoto = async (photo: any) => {
+        try {
+            // DIRECT OCR
+            const cleanPath = Platform.OS === 'android' 
+                ? photo.path.replace('file://', '') 
+                : photo.path;
+
+            const result = await TextRecognition.recognize(cleanPath);
+            
+            if (result && result.length > 0) {
+                let bestCandidate = '';
+                let highestScore = -1;
+
+                result.forEach(line => {
+                    const cleanedLine = cleanPlateNumber(line);
+                    if (!cleanedLine) return;
+
+                    let score = 0;
+                    if (/^[A-Z]{1,2}\d{1,4}[A-Z]{1,3}$/.test(cleanedLine)) score += 100;
+                    else if (/^[A-Z]{1,2}\d{1,4}/.test(cleanedLine)) score += 50;
+                    if (cleanedLine.length >= 4 && cleanedLine.length <= 9) score += 20;
+
+                    if (score > highestScore) {
+                        highestScore = score;
+                        bestCandidate = cleanedLine;
+                    }
+                });
+                
+                return bestCandidate ? formatPlateNumber(bestCandidate) : result[0];
+            }
+        } catch (e) {
+            console.error('OCR Process failed', e);
+        }
+        return null;
+    };
 
     const handleCapture = async () => {
-        if (!cameraRef.current) return;
+        if (isProcessing) return;
         
         setIsProcessing(true);
+        setProcessingStep('capturing');
+
         try {
-            // In a real app, we would use a frame processor or send this image to an OCR service.
-            // For now, we simulate a detection or let the user enter it if detection fails.
-            const photo = await cameraRef.current.takePhoto({
-                flash: 'auto',
-            });
+            if (!cameraRef.current) throw new Error('Camera not ready');
             
-            // Simulating OCR result
-            const simulatedResult = "B 1234 ABC"; 
-            setCapturedPlate(simulatedResult);
+            const photo = await cameraRef.current.takePhoto({ 
+                flash: 'off',
+                enableShutterSound: true 
+            });
+
+            setCapturedImagePath(photo.path); // SAVE THE FULL IMAGE PATH
+
+            setProcessingStep('recognizing');
+            await new Promise(resolve => setTimeout(resolve, 800));
+
+            const result = await processPhoto(photo);
+            setCapturedPlate(result || '');
             setIsEditing(true);
         } catch (error) {
-            console.error('Capture failed', error);
-            setIsEditing(true); // Allow manual entry on failure
+            console.error('Manual capture failed', error);
+            Alert.alert('Error', 'Gagal mengambil gambar.');
+            setIsEditing(false);
         } finally {
             setIsProcessing(false);
+            setProcessingStep('none');
         }
     };
 
     const handleConfirm = () => {
-        const cleaned = cleanPlateNumber(capturedPlate);
-        onCapture(cleaned);
+        const formatted = formatPlateNumber(capturedPlate);
+        onCapture(formatted, capturedImagePath); // SEND BOTH TEXT AND IMAGE
         setCapturedPlate('');
+        setCapturedImagePath('');
+        setDetectedPlate('');
         setIsEditing(false);
         onClose();
     };
@@ -60,35 +171,87 @@ const PlateOCRModal: React.FC<PlateOCRModalProps> = ({ visible, onClose, onCaptu
                             ref={cameraRef}
                             style={StyleSheet.absoluteFill}
                             device={device}
-                            isActive={visible && !isEditing}
+                            isActive={visible && !isEditing && processingStep !== 'recognizing'}
                             photo={true}
                         />
                         <View style={styles.overlay}>
                             <View style={styles.header}>
-                                <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+                                <TouchableOpacity onPress={() => {
+                                    setDetectedPlate('');
+                                    onClose();
+                                }} style={styles.closeButton}>
                                     <MaterialIcons name="close" size={30} color={Colors.white} />
                                 </TouchableOpacity>
-                                <Text style={styles.headerTitle}>Scan Plate Number</Text>
+                                <Text style={styles.headerTitle}>Scan Plat Nomor</Text>
                                 <View style={{ width: 30 }} />
                             </View>
                             
-                            <View style={styles.scannerFrame}>
-                                <View style={styles.cornerTopLeft} />
-                                <View style={styles.cornerTopRight} />
-                                <View style={styles.cornerBottomLeft} />
-                                <View style={styles.cornerBottomRight} />
+                            <View style={styles.centerContainer}>
+                                {/* Crop Masks (Dark Overlays) */}
+                                <View style={[styles.mask, { top: 0, left: 0, right: 0, height: currentFrameY }]} />
+                                <View style={[styles.mask, { top: currentFrameY + frameHeight, left: 0, right: 0, bottom: 0 }]} />
+                                <View style={[styles.mask, { top: currentFrameY, left: 0, width: currentFrameX, height: frameHeight }]} />
+                                <View style={[styles.mask, { top: currentFrameY, right: 0, left: currentFrameX + frameWidth, height: frameHeight }]} />
+
+                                {/* Draggable & Resizable Frame */}
+                                <View 
+                                    style={[
+                                        styles.draggableFrame,
+                                        { 
+                                            top: currentFrameY, 
+                                            left: currentFrameX, 
+                                            width: frameWidth, 
+                                            height: frameHeight 
+                                        }
+                                    ]}
+                                >
+                                    <View style={styles.scannerFrame} {...moveResponder.panHandlers}>
+                                        <View style={styles.cornerTopLeft} />
+                                        <View style={styles.cornerTopRight} />
+                                        <View style={styles.cornerBottomLeft} />
+                                        <View style={styles.cornerBottomRight} />
+                                        
+                                        {/* Resize Handle */}
+                                        <View 
+                                            style={styles.resizeHandle} 
+                                            {...resizeResponder.panHandlers}
+                                        >
+                                            <MaterialIcons name="aspect-ratio" size={24} color={Colors.bgOrange} />
+                                        </View>
+                                    </View>
+                                    <Text style={styles.dragHint}>Tarik tengah untuk geser, pojok untuk ubah ukuran</Text>
+                                </View>
+                                
+                                {detectedPlate && !isProcessing && (
+                                    <View style={styles.detectedBadge}>
+                                        <MaterialIcons name="check-circle" size={20} color={Colors.bgOrange} />
+                                        <Text style={styles.detectedText}>{detectedPlate}</Text>
+                                    </View>
+                                )}
                             </View>
-                            
-                            <Text style={styles.hint}>Align plate number within the frame</Text>
                             
                             <TouchableOpacity 
                                 style={[styles.captureButton, isProcessing && { opacity: 0.5 }]} 
                                 onPress={handleCapture}
                                 disabled={isProcessing}
                             >
-                                <View style={styles.captureInner} />
+                                <View style={[styles.captureInner, detectedPlate && { backgroundColor: Colors.bgOrange }]} />
                             </TouchableOpacity>
                         </View>
+
+                        {/* Processing Overlay */}
+                        {processingStep !== 'none' && (
+                            <View style={styles.processingOverlay}>
+                                <View style={styles.processingBox}>
+                                    <ActivityIndicator size="large" color={Colors.bgOrange} />
+                                    <Text style={styles.processingText}>
+                                        {processingStep === 'capturing' 
+                                            ? 'Mohon Tunggu...\nJangan Gerakkan Kamera' 
+                                            : 'Memproses Plat Nomor...'}
+                                    </Text>
+                                </View>
+                            </View>
+                        )}
                     </>
                 ) : (
                     <View style={styles.editContainer}>
@@ -97,14 +260,14 @@ const PlateOCRModal: React.FC<PlateOCRModalProps> = ({ visible, onClose, onCaptu
                             <TextInput
                                 style={styles.input}
                                 value={capturedPlate}
-                                onChangeText={setCapturedPlate}
-                                autoFocus
+                                onChangeText={(text) => setCapturedPlate(cleanPlateNumber(text))}
                                 autoCapitalize="characters"
-                                placeholder="Input Plat Nomor"
+                                placeholder="Masukkan plat nomor"
+                                placeholderTextColor="rgba(255,255,255,0.5)"
                             />
                         </View>
                         <Text style={styles.editHint}>OCR result: {capturedPlate}</Text>
-                        <Text style={styles.editHint}>Trimmed: {cleanPlateNumber(capturedPlate)}</Text>
+                        <Text style={styles.editHint}>Standardized: {cleanPlateNumber(capturedPlate)}</Text>
                         
                         <TouchableOpacity style={styles.confirmButton} onPress={handleConfirm}>
                             <Text style={styles.confirmText}>TERAPKAN</Text>
@@ -146,12 +309,71 @@ const styles = StyleSheet.create({
     closeButton: {
         padding: 5,
     },
+    centerContainer: {
+        flex: 1,
+        width: '100%',
+    },
+    mask: {
+        position: 'absolute',
+        backgroundColor: 'rgba(0,0,0,0.5)',
+    },
+    draggableFrame: {
+        position: 'absolute',
+        alignItems: 'center',
+    },
     scannerFrame: {
-        width: '80%',
-        height: 150,
+        width: '100%',
+        height: '100%',
         borderWidth: 0,
         justifyContent: 'center',
         alignItems: 'center',
+    },
+    resizeHandle: {
+        position: 'absolute',
+        bottom: -15,
+        right: -15,
+        backgroundColor: Colors.white,
+        borderRadius: 15,
+        padding: 5,
+        elevation: 5,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+    },
+    dragHint: {
+        color: Colors.white,
+        fontSize: 10,
+        marginTop: 10,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        paddingHorizontal: 8,
+        borderRadius: 5,
+        position: 'absolute',
+        bottom: -35,
+        width: 250,
+        textAlign: 'center',
+    },
+    detectedBadge: {
+        position: 'absolute',
+        top: 40,
+        alignSelf: 'center',
+        flexDirection: 'row',
+        backgroundColor: Colors.white,
+        paddingHorizontal: 20,
+        paddingVertical: 10,
+        borderRadius: 20,
+        alignItems: 'center',
+        gap: 8,
+        elevation: 5,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+    },
+    detectedText: {
+        color: Colors.black,
+        fontSize: 18,
+        fontWeight: 'bold',
     },
     cornerTopLeft: {
         position: 'absolute',
@@ -266,6 +488,28 @@ const styles = StyleSheet.create({
     retryText: {
         color: Colors.grey,
         fontSize: 16,
+    },
+    processingOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(0,0,0,0.7)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 1000,
+    },
+    processingBox: {
+        backgroundColor: Colors.white,
+        padding: 30,
+        borderRadius: 20,
+        alignItems: 'center',
+        width: '80%',
+    },
+    processingText: {
+        marginTop: 20,
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: Colors.black,
+        textAlign: 'center',
+        lineHeight: 22,
     }
 });
 

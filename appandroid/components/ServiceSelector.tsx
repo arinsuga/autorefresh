@@ -6,19 +6,19 @@ import { MaterialIcons } from '@expo/vector-icons';
 
 interface ServiceSelectorProps {
     services: IServiceType[];
-    selectedServiceIds: number[];
-    onToggle: (serviceId: number) => void;
+    selectedServiceId: number | null;
+    onSelect: (serviceId: number) => void;
 }
 
-const ServiceSelector: React.FC<ServiceSelectorProps> = ({ services, selectedServiceIds, onToggle }) => {
+const ServiceSelector: React.FC<ServiceSelectorProps> = ({ services, selectedServiceId, onSelect }) => {
     
     const renderItem = ({ item }: { item: IServiceType }) => {
-        const isSelected = selectedServiceIds.includes(item.id);
+        const isSelected = selectedServiceId === item.id;
         
         return (
             <TouchableOpacity 
                 style={[styles.item, isSelected && styles.itemSelected]} 
-                onPress={() => onToggle(item.id)}
+                onPress={() => onSelect(item.id)}
             >
                 <View style={styles.itemInfo}>
                     <Text style={[styles.name, isSelected && styles.textSelected]}>{item.service_name}</Text>
@@ -27,7 +27,7 @@ const ServiceSelector: React.FC<ServiceSelectorProps> = ({ services, selectedSer
                     </Text>
                 </View>
                 <MaterialIcons 
-                    name={isSelected ? "check-box" : "check-box-outline-blank"} 
+                    name={isSelected ? "radio-button-checked" : "radio-button-unchecked"} 
                     size={24} 
                     color={isSelected ? Colors.white : Colors.grey} 
                 />

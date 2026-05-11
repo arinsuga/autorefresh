@@ -40,6 +40,7 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
+      "./plugins/withAndroidTextRecognition",
       "expo-router",
       [
         "expo-camera",
@@ -70,7 +71,9 @@
         "expo-build-properties",
         {
           "android": {
-            "targetSdkVersion": 35
+            "compileSdkVersion": 34,
+            "targetSdkVersion": 34,
+            "buildToolsVersion": "34.0.0"
           }
         }
       ]
