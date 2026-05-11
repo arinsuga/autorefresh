@@ -12,7 +12,7 @@ const TransactionService = {
         return response.data.data as ITransaction;
     },
 
-    create: async (data: ITransaction) => {
+    create: async (data: ITransaction | FormData) => {
         const response = await ApiService.post('/transactions', data);
         return response.data.data as ITransaction;
     },

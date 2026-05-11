@@ -8,7 +8,8 @@ import {
     TextInput, 
     Alert,
     KeyboardAvoidingView,
-    Platform
+    Platform,
+    Image
 } from 'react-native';
 import { Stack, useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { useCallback } from 'react';
@@ -23,8 +24,10 @@ import { IVehicleType } from '@/interfaces/IVehicleType';
 import { IServiceType } from '@/interfaces/IServiceType';
 import { IPaymentMethod } from '@/interfaces/IPaymentMethod';
 import { ITransaction } from '@/interfaces/ITransaction';
+import { IBranch } from '@/interfaces/IBranch';
 import VehicleTypeSelector from '@/components/VehicleTypeSelector';
 import ServiceSelector from '@/components/ServiceSelector';
+import BranchSelector from '@/components/BranchSelector';
 import PlateOCRModal from '@/components/PlateOCRModal';
 import { MaterialIcons } from '@expo/vector-icons';
 import { cleanPlateNumber } from '@/utils/PlateUtils';
@@ -43,6 +46,8 @@ export default function TransactionScreen() {
 
     // Form states
     const [plateNumber, setPlateNumber] = useState('');
+    const [capturedImage, setCapturedImage] = useState<string | null>(null);
+    const [selectedBranch, setSelectedBranch] = useState<IBranch | null>(authState?.selectedBranch || null);
     const [selectedVehicleType, setSelectedVehicleType] = useState<IVehicleType | null>(null);
     const [selectedServiceId, setSelectedServiceId] = useState<number | null>(null);
     const [selectedPaymentMethodId, setSelectedPaymentMethodId] = useState<number | null>(null);
@@ -97,6 +102,10 @@ export default function TransactionScreen() {
     };
 
     const handleSubmit = async () => {
+        if (!selectedBranch) {
+            Alert.alert('Validation Error', 'Silahkan pilih cabang terlebih dahulu');
+            return;
+        }
         if (!plateNumber) {
             Alert.alert('Error', 'Masukkan Plat Nomor');
             return;
@@ -119,24 +128,32 @@ export default function TransactionScreen() {
             const total = calculateTotal();
             const service = serviceTypes.find(s => s.id === selectedServiceId);
             
-            const transactionData: ITransaction = {
-                branch_id: authState?.selectedBranch?.id || 0,
-                transaction_dt: moment().format('YYYY-MM-DD HH:mm:ss'),
-                plate_number: cleanPlateNumber(plateNumber),
-                vehicle_type_id: selectedVehicleType.id,
-                payment_method_id: selectedPaymentMethodId,
-                gross_total: total,
-                discount: 0,
-                net_total: total,
-                services: [
-                    {
-                        service_type_id: selectedServiceId,
-                        service_price: service ? service.service_price : 0
-                    }
-                ]
-            };
+            const formData = new FormData();
+            formData.append('branch_id', selectedBranch.id.toString());
+            formData.append('transaction_dt', moment().format('YYYY-MM-DD HH:mm:ss'));
+            formData.append('plate_number', cleanPlateNumber(plateNumber));
+            formData.append('vehicle_type_id', selectedVehicleType.id.toString());
+            formData.append('payment_method_id', selectedPaymentMethodId.toString());
+            formData.append('gross_total', total.toString());
+            formData.append('discount', '0');
+            formData.append('net_total', total.toString());
 
-            const result = await TransactionService.create(transactionData);
+            // Append services as array indices for Laravel multipart/form-data
+            if (service) {
+                formData.append('services[0][service_type_id]', service.id.toString());
+                formData.append('services[0][service_price]', service.service_price.toString());
+            }
+
+            if (capturedImage) {
+                const fileName = capturedImage.split('/').pop() || 'transaction.jpg';
+                formData.append('upload', {
+                    uri: capturedImage,
+                    name: fileName,
+                    type: 'image/jpeg',
+                } as any);
+            }
+
+            const result = await TransactionService.create(formData);
             
             showMessage({
                 message: "Success",
@@ -145,9 +162,18 @@ export default function TransactionScreen() {
             });
             
             router.back();
-        } catch (error) {
+        } catch (error: any) {
             console.error('Gagal menyimpan transaksi', error);
-            Alert.alert('Error', 'Gagal menyimpan transaksi');
+            
+            let errorMsg = 'Gagal menyimpan transaksi';
+            if (error.response?.data?.errors) {
+                const errors = error.response.data.errors;
+                errorMsg = Object.values(errors).flat().join('\n');
+            } else if (error.response?.data?.message) {
+                errorMsg = error.response.data.message;
+            }
+            
+            Alert.alert('Error', errorMsg);
         } finally {
             setIsSubmitting(false);
         }
@@ -161,6 +187,18 @@ export default function TransactionScreen() {
             <Stack.Screen options={{ title: 'Transaksi Baru', headerShadowVisible: false }} />
             
             <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
+                {(!authState?.selectedBranch) && (
+                    <View style={styles.formSection}>
+                        <Text style={[styles.label, !selectedBranch && styles.errorLabel]}>
+                            Cabang {!selectedBranch && '(Wajib diisi)'}
+                        </Text>
+                        <BranchSelector 
+                            onSelect={setSelectedBranch} 
+                            selectedBranch={selectedBranch} 
+                        />
+                    </View>
+                )}
+
                 <View style={styles.formSection}>
                     <Text style={styles.label}>Plat Nomor</Text>
                     <View style={styles.plateInputContainer}>
@@ -168,12 +206,12 @@ export default function TransactionScreen() {
                             style={[styles.plateInput, { color: theme.text }]}
                             value={plateNumber}
                             onChangeText={(text) => setPlateNumber(cleanPlateNumber(text))}
-                            placeholder="e.g. B 1234 ABC"
+                            placeholder="contoh input: B1234ABC"
                             placeholderTextColor={Colors.grey}
                             autoCapitalize="characters"
                         />
                         <TouchableOpacity 
-                            style={styles.ocrButton} 
+                            style={styles.ocrButton}
                             onPress={() => setIsOCRVisible(true)}
                         >
                             <MaterialIcons name="camera-alt" size={24} color={Colors.white} />
@@ -182,11 +220,26 @@ export default function TransactionScreen() {
                     <Text style={styles.inputHint}>Dapat diedit jika hasil scan kurang akurat</Text>
                 </View>
 
+                {capturedImage && (
+                    <View style={styles.formSection}>
+                        <Text style={styles.label}>Foto Kendaraan</Text>
+                        <View style={styles.imagePreviewContainer}>
+                            <Image source={{ uri: capturedImage }} style={styles.imagePreview} />
+                            <TouchableOpacity 
+                                style={styles.removeImageButton}
+                                onPress={() => setCapturedImage(null)}
+                            >
+                                <MaterialIcons name="close" size={20} color={Colors.white} />
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                )}
+
                 <View style={styles.formSection}>
                     <VehicleTypeSelector 
                         types={vehicleTypes} 
                         selectedId={selectedVehicleType?.id} 
-                        onSelect={() => {}} // dummy for compatibility
+                        onSelect={() => {}} 
                         onSelectType={handleVehicleTypeSelect} 
                     />
                 </View>
@@ -257,8 +310,9 @@ export default function TransactionScreen() {
             <PlateOCRModal 
                 visible={isOCRVisible} 
                 onClose={() => setIsOCRVisible(false)} 
-                onCapture={(plate) => {
+                onCapture={(plate, imagePath) => {
                     setPlateNumber(plate);
+                    if (imagePath) setCapturedImage(imagePath);
                     setIsOCRVisible(false);
                 }} 
             />
@@ -280,8 +334,36 @@ const styles = StyleSheet.create({
         color: Colors.black,
         marginBottom: 10,
     },
+    errorLabel: {
+        color: Colors.red,
+    },
     plateInputContainer: {
         flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+    },
+    imagePreviewContainer: {
+        position: 'relative',
+        width: '100%',
+        height: 200,
+        borderRadius: 10,
+        overflow: 'hidden',
+        backgroundColor: Colors.greyDark,
+    },
+    imagePreview: {
+        width: '100%',
+        height: '100%',
+        resizeMode: 'cover',
+    },
+    removeImageButton: {
+        position: 'absolute',
+        top: 10,
+        right: 10,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        borderRadius: 15,
+        width: 30,
+        height: 30,
+        justifyContent: 'center',
         alignItems: 'center',
     },
     plateInput: {

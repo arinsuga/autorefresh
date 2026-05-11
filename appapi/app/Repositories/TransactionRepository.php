@@ -6,6 +6,8 @@ use App\Transaction;
 use App\Repositories\Contracts\TransactionRepositoryInterface;
 use App\Repositories\Data\EloquentRepository;
 use Illuminate\Support\Facades\DB;
+use Arins\Facades\Filex;
+use Intervention\Image\Facades\Image;
 
 class TransactionRepository extends EloquentRepository implements TransactionRepositoryInterface
 {
@@ -57,6 +59,49 @@ class TransactionRepository extends EloquentRepository implements TransactionRep
                     'service_type_id' => $service['service_type_id'],
                     'service_price'   => $service['service_price'],
                 ]);
+            }
+
+            // Handle image upload and compression
+            if (isset($data['upload']) && $data['upload'] instanceof \Illuminate\Http\UploadedFile) {
+                $file = $data['upload'];
+                $uploadDirectory = 'autorefresh';
+                
+                // 1. Save original file using Filex helper
+                $path = Filex::upload(null, $uploadDirectory, $file, 'public', 'transaction');
+                
+                // 2. Compress image if needed (target < 1MB)
+                if ($path) {
+                    $fullPath = storage_path('app/public/' . $path);
+                    
+                    // Only compress if file exists and is an image
+                    if (file_exists($fullPath)) {
+                        $img = Image::make($fullPath);
+                        
+                        // Check size (1MB = 1048576 bytes)
+                        if (filesize($fullPath) > 1048576) {
+                            // Resize if too large (optional but helpful for speed)
+                            if ($img->width() > 1600) {
+                                $img->resize(1600, null, function ($constraint) {
+                                    $constraint->aspectRatio();
+                                    $constraint->upsize();
+                                });
+                            }
+                            
+                            // Save with lower quality until size is < 1MB
+                            $quality = 85;
+                            $img->save($fullPath, $quality);
+                            
+                            while (filesize($fullPath) > 1048576 && $quality > 10) {
+                                $quality -= 10;
+                                $img->save($fullPath, $quality);
+                            }
+                        }
+                        
+                        // 3. Update transaction with the photo path
+                        $transaction->transaction_photo = $path;
+                        $transaction->save();
+                    }
+                }
             }
 
             return $transaction->fresh(['branch', 'vehicleType', 'paymentMethod', 'transactionServices.serviceType']);

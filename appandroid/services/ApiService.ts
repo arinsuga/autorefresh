@@ -4,18 +4,25 @@ import { authSubject } from './AuthService';
 const ApiService = axios.create({
     baseURL: process.env.EXPO_PUBLIC_APPAPIURL,
     headers: {
-        'Content-Type': 'application/json',
         'Accept': 'application/json',
     },
 });
 
-// Request interceptor to attach JWT token
+// Request interceptor to attach JWT token and handle multipart/form-data
 ApiService.interceptors.request.use(
     (config) => {
         const auth = authSubject.value;
         if (auth && auth.token && auth.token.token) {
             config.headers.Authorization = `Bearer ${auth.token.token}`;
         }
+
+        // If sending FormData, let the browser/Axios set the Content-Type with boundary
+        if (config.data instanceof FormData) {
+            delete config.headers['Content-Type'];
+        } else {
+            config.headers['Content-Type'] = 'application/json';
+        }
+
         return config;
     },
     (error) => {

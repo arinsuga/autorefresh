@@ -46,6 +46,7 @@ class TransactionController extends Controller
             'services'          => 'required|array|min:1',
             'services.*.service_type_id' => 'required|exists:service_types,id',
             'services.*.service_price'   => 'required|numeric|min:0',
+            'upload'            => 'nullable|image|max:10240', // Max 10MB raw, will be compressed
         ]);
 
         // Attach the authenticated user as creator
