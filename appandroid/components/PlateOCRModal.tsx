@@ -232,6 +232,14 @@ const PlateOCRModal: React.FC<PlateOCRModalProps> = ({ visible, onClose, onCaptu
                         )}
                     </TouchableOpacity>
                 </View>
+
+                {isProcessing && (
+                    <View style={styles.processingOverlay}>
+                        <ActivityIndicator size="large" color={Colors.primary || Colors.white} />
+                        <Text style={styles.processingText}>Memproses gambar...</Text>
+                        <Text style={styles.processingSubText}>Mohon tunggu sebentar</Text>
+                    </View>
+                )}
             </View>
         </Modal>
     );
@@ -259,6 +267,9 @@ const styles = StyleSheet.create({
     gridH2: { position: 'absolute', top: '66%', left: 0, right: 0, height: 0.5, backgroundColor: 'rgba(255,255,255,0.4)' },
     cropHeader: { position: 'absolute', top: 100, left: 0, right: 0, alignItems: 'center', zIndex: 10 },
     cropInstruction: { color: Colors.white, backgroundColor: 'rgba(0,0,0,0.5)', paddingHorizontal: 15, paddingVertical: 8, borderRadius: 20, fontSize: 14, textAlign: 'center', marginHorizontal: 20 },
+    processingOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.8)', justifyContent: 'center', alignItems: 'center', zIndex: 20 },
+    processingText: { color: Colors.white, fontSize: 18, fontWeight: 'bold', marginTop: 20, textAlign: 'center' },
+    processingSubText: { color: Colors.lightGray || '#ccc', fontSize: 14, marginTop: 10, textAlign: 'center', paddingHorizontal: 40 },
 });
 
 export default PlateOCRModal;

@@ -6,19 +6,35 @@ import { MaterialIcons } from '@expo/vector-icons';
 
 interface ServiceSelectorProps {
     services: IServiceType[];
-    selectedServiceId: number | null;
-    onSelect: (serviceId: number) => void;
+    selectedServiceId?: number | null;
+    selectedServiceIds?: number[];
+    multiple?: boolean;
+    onSelect?: (serviceId: number) => void;
+    onToggle?: (serviceId: number) => void;
 }
 
-const ServiceSelector: React.FC<ServiceSelectorProps> = ({ services, selectedServiceId, onSelect }) => {
+const ServiceSelector: React.FC<ServiceSelectorProps> = ({ 
+    services, 
+    selectedServiceId, 
+    selectedServiceIds = [], 
+    multiple = false, 
+    onSelect, 
+    onToggle 
+}) => {
     
     const renderItem = ({ item }: { item: IServiceType }) => {
-        const isSelected = selectedServiceId === item.id;
+        const isSelected = multiple ? selectedServiceIds.includes(item.id) : selectedServiceId === item.id;
         
         return (
             <TouchableOpacity 
                 style={[styles.item, isSelected && styles.itemSelected]} 
-                onPress={() => onSelect(item.id)}
+                onPress={() => {
+                    if (multiple && onToggle) {
+                        onToggle(item.id);
+                    } else if (onSelect) {
+                        onSelect(item.id);
+                    }
+                }}
             >
                 <View style={styles.itemInfo}>
                     <Text style={[styles.name, isSelected && styles.textSelected]}>{item.service_name}</Text>

@@ -41,6 +41,13 @@ interface IReportFilterProps {
     onCancel: () => void;
 }
 
+const ALL_VEHICLE_TYPE: IVehicleType = {
+    id: 0,
+    vehicle_type_name: 'Semua',
+    vehicle_type_code: 'ALL',
+    is_active: 1
+};
+
 const ReportFilterDialog = ({ 
     visible, 
     initialBranch,
@@ -63,8 +70,8 @@ const ReportFilterDialog = ({
         const fetchMetadata = async () => {
             try {
                 const vTypes = await VehicleTypeService.getActive();
-                setVehicleTypes(vTypes);
-                if (vTypes.length > 0) setSelectedVehicleIds([vTypes[0].id]);
+                setVehicleTypes([ALL_VEHICLE_TYPE, ...vTypes]);
+                setSelectedVehicleIds([0]); // Default to "All"
             } catch (error) {
                 console.error('Error fetching metadata', error);
             }
@@ -76,10 +83,19 @@ const ReportFilterDialog = ({
         const fetchServices = async () => {
             if (selectedVehicleIds.length === 0) return;
             try {
-                // Fetch services for the first selected vehicle type for now
-                const sTypes = await ServiceTypeService.getByVehicleType(selectedVehicleIds[0]);
+                // If "All" is selected (id 0), fetch all active services
+                // Otherwise, fetch services for the first selected vehicle type
+                const sTypes = selectedVehicleIds.includes(0)
+                    ? await ServiceTypeService.getActive()
+                    : await ServiceTypeService.getByVehicleType(selectedVehicleIds[0]);
+                
                 setServices(sTypes);
-                setSelectedServiceIds([]); 
+                // Set first service as default
+                if (sTypes.length > 0) {
+                    setSelectedServiceIds([sTypes[0].id]);
+                } else {
+                    setSelectedServiceIds([]);
+                }
             } catch (error) {
                 console.error('Error fetching services', error);
             }
@@ -97,15 +113,31 @@ const ReportFilterDialog = ({
     });
 
     const handleToggleService = (id: number) => {
-        setSelectedServiceIds(prev => 
-            prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
-        );
+        setSelectedServiceIds(prev => {
+            if (prev.includes(id)) {
+                // Don't allow deselecting if it's the last one
+                if (prev.length === 1) return prev;
+                return prev.filter(i => i !== id);
+            }
+            return [...prev, id];
+        });
     };
 
     const handleToggleVehicle = (id: number) => {
-        setSelectedVehicleIds(prev => 
-            prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
-        );
+        setSelectedVehicleIds(prev => {
+            if (id === 0) {
+                // If "All" is selected, clear others and just keep "All"
+                return [0];
+            } else {
+                // If another type is selected
+                let next = prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id];
+                // Remove "All" if it was there
+                next = next.filter(i => i !== 0);
+                // If nothing left, default back to "All"
+                if (next.length === 0) return [0];
+                return next;
+            }
+        });
     };
 
     const dlgWidth = Dimensions.get('window').width * 0.95;
@@ -180,6 +212,7 @@ const ReportFilterDialog = ({
                             <ServiceSelector 
                                 services={services} 
                                 selectedServiceIds={selectedServiceIds} 
+                                multiple={true}
                                 onToggle={handleToggleService} 
                             />
                         </View>

@@ -90,6 +90,9 @@ export default function TransactionScreen() {
         try {
             const sTypes = await ServiceTypeService.getByVehicleType(type.id);
             setServiceTypes(sTypes);
+            if (sTypes.length > 0) {
+                setSelectedServiceId(sTypes[0].id);
+            }
         } catch (error) {
             console.error('Failed to fetch service types', error);
         }
@@ -202,14 +205,24 @@ export default function TransactionScreen() {
                 <View style={styles.formSection}>
                     <Text style={styles.label}>Plat Nomor</Text>
                     <View style={styles.plateInputContainer}>
-                        <TextInput
-                            style={[styles.plateInput, { color: theme.text }]}
-                            value={plateNumber}
-                            onChangeText={(text) => setPlateNumber(cleanPlateNumber(text))}
-                            placeholder="contoh input: B1234ABC"
-                            placeholderTextColor={Colors.grey}
-                            autoCapitalize="characters"
-                        />
+                        <View style={styles.inputWrapper}>
+                            <TextInput
+                                style={[styles.plateInput, { color: theme.text }]}
+                                value={plateNumber}
+                                onChangeText={(text) => setPlateNumber(cleanPlateNumber(text))}
+                                placeholder="contoh input: B1234ABC"
+                                placeholderTextColor={Colors.grey}
+                                autoCapitalize="characters"
+                            />
+                            {plateNumber.length > 0 && (
+                                <TouchableOpacity 
+                                    style={styles.clearButton}
+                                    onPress={() => setPlateNumber('')}
+                                >
+                                    <MaterialIcons name="cancel" size={22} color={Colors.grey} />
+                                </TouchableOpacity>
+                            )}
+                        </View>
                         <TouchableOpacity 
                             style={styles.ocrButton}
                             onPress={() => setIsOCRVisible(true)}
@@ -291,21 +304,26 @@ export default function TransactionScreen() {
                         >
                             <Text style={styles.cancelText}>BATAL</Text>
                         </TouchableOpacity>
-
-                        <TouchableOpacity 
-                            style={[styles.submitButton, isSubmitting && { opacity: 0.7 }]} 
-                            onPress={handleSubmit}
-                            disabled={isSubmitting}
-                        >
-                            <Text style={styles.submitText}>
-                                {isSubmitting ? 'Simpan...' : 'SIMPAN'}
-                            </Text>
-                        </TouchableOpacity>
                     </View>
                 </View>
 
-                <View style={{ height: 40 }} />
+                <View style={{ height: 100 }} />
             </ScrollView>
+
+            <TouchableOpacity 
+                style={[styles.fab, isSubmitting && { opacity: 0.7 }]} 
+                onPress={handleSubmit}
+                disabled={isSubmitting}
+            >
+                {isSubmitting ? (
+                    <Text style={styles.submitText}>...</Text>
+                ) : (
+                    <View style={styles.fabContent}>
+                        <MaterialIcons name="save" size={28} color={Colors.white} />
+                        <Text style={styles.fabText}>SIMPAN</Text>
+                    </View>
+                )}
+            </TouchableOpacity>
 
             <PlateOCRModal 
                 visible={isOCRVisible} 
@@ -469,5 +487,47 @@ const styles = StyleSheet.create({
         color: Colors.grey,
         fontSize: 16,
         fontWeight: 'bold',
+    },
+    inputWrapper: {
+        flex: 1,
+        position: 'relative',
+        justifyContent: 'center',
+    },
+    clearButton: {
+        position: 'absolute',
+        right: 12,
+        height: '100%',
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 5,
+    },
+    fab: {
+        position: 'absolute',
+        bottom: 30,
+        right: 20,
+        backgroundColor: Colors.bgOrange,
+        paddingHorizontal: 25,
+        paddingVertical: 15,
+        borderRadius: 30,
+        elevation: 8,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4.65,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minWidth: 140,
+    },
+    fabContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+    },
+    fabText: {
+        color: Colors.white,
+        fontSize: 16,
+        fontWeight: 'bold',
+        letterSpacing: 1,
     }
 });
