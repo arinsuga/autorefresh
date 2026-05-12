@@ -20,12 +20,8 @@ const PlateOCRModal: React.FC<PlateOCRModalProps> = ({ visible, onClose, onCaptu
     const device = useCameraDevice('back');
     const cameraRef = useRef<Camera>(null);
     
-    const [step, setStep] = useState<'camera' | 'crop' | 'edit'>('camera');
     const [isProcessing, setIsProcessing] = useState(false);
     
-    const [tempImagePath, setTempImagePath] = useState('');
-    const [capturedPlate, setCapturedPlate] = useState('');
-
     // Crop Box State
     const [boxX, setBoxX] = useState((SCREEN_WIDTH - (SCREEN_WIDTH * 0.8)) / 2);
     const [boxY, setBoxY] = useState((SCREEN_HEIGHT - 150) / 2);
@@ -91,9 +87,6 @@ const PlateOCRModal: React.FC<PlateOCRModalProps> = ({ visible, onClose, onCaptu
 
     React.useEffect(() => {
         if (!visible) {
-            setStep('camera');
-            setTempImagePath('');
-            setCapturedPlate('');
             setIsProcessing(false);
         }
     }, [visible]);
@@ -112,33 +105,15 @@ const PlateOCRModal: React.FC<PlateOCRModalProps> = ({ visible, onClose, onCaptu
                 qualityPrioritization: 'speed'
             });
             
-            // OPTIMIZATION: Resize full photo immediately to save space and upload time
-            const compressed = await manipulateAsync(
-                getSafeUri(photo.path),
-                [{ resize: { width: 1200 } }], // Resize to reasonable width
-                { compress: 0.6, format: SaveFormat.JPEG }
-            );
-
-            setTempImagePath(compressed.uri);
-            setStep('crop');
-        } catch (e) {
-            Alert.alert('Error', 'Gagal mengambil gambar');
-        } finally {
-            setIsProcessing(false);
-        }
-    };
-
-    const handleApplyCrop = async () => {
-        try {
-            setIsProcessing(true);
-            const { x, y, w, h } = boxState.current;
-
+            // 1. Resize/Normalize full photo
             const normalized = await manipulateAsync(
-                getSafeUri(tempImagePath),
-                [],
+                getSafeUri(photo.path),
+                [{ resize: { width: 1200 } }], 
                 { compress: 0.8, format: SaveFormat.JPEG }
             );
 
+            // 2. Perform Cropping Logic
+            const { x, y, w, h } = boxState.current;
             const pW = normalized.width;
             const pH = normalized.height;
             const screenAspect = SCREEN_WIDTH / SCREEN_HEIGHT;
@@ -173,6 +148,7 @@ const PlateOCRModal: React.FC<PlateOCRModalProps> = ({ visible, onClose, onCaptu
                 { compress: 1.0, format: SaveFormat.JPEG }
             );
 
+            // 3. OCR
             const cleanPath = Platform.OS === 'android' ? cropped.uri.replace('file://', '') : cropped.uri;
             const result = await TextRecognition.recognize(cleanPath);
             
@@ -194,18 +170,14 @@ const PlateOCRModal: React.FC<PlateOCRModalProps> = ({ visible, onClose, onCaptu
                 if (!bestCandidate) bestCandidate = result[0];
             }
             
-            setCapturedPlate(bestCandidate || '');
-            setStep('edit');
+            // 4. Return result
+            onCapture(formatPlateNumber(bestCandidate || ''), normalized.uri);
+            onClose();
         } catch (e) {
-            Alert.alert('Error', 'Gagal mengenali plat nomor');
+            Alert.alert('Error', 'Gagal mengambil atau memproses gambar');
         } finally {
             setIsProcessing(false);
         }
-    };
-
-    const handleConfirm = () => {
-        onCapture(formatPlateNumber(capturedPlate), tempImagePath);
-        onClose();
     };
 
     if (!device) return null;
@@ -213,75 +185,53 @@ const PlateOCRModal: React.FC<PlateOCRModalProps> = ({ visible, onClose, onCaptu
     return (
         <Modal visible={visible} animationType="fade" transparent={false}>
             <View style={styles.container}>
-                {step === 'camera' && (
-                    <>
-                        <Camera ref={cameraRef} style={StyleSheet.absoluteFill} device={device} isActive={visible && step === 'camera'} photo={true} />
-                        <View style={styles.header}>
-                            <TouchableOpacity onPress={onClose} style={styles.iconButton}>
-                                <MaterialIcons name="close" size={30} color={Colors.white} />
-                            </TouchableOpacity>
-                            <Text style={styles.headerTitle}>Ambil Foto Kendaraan</Text>
-                            <View style={{ width: 40 }} />
+                <Camera 
+                    ref={cameraRef} 
+                    style={StyleSheet.absoluteFill} 
+                    device={device} 
+                    isActive={visible} 
+                    photo={true} 
+                />
+                
+                {/* Crop Overlay */}
+                <View style={styles.fullOverlay} {...panResponder.panHandlers}>
+                    <View style={[styles.mask, { top: 0, left: 0, right: 0, height: boxY }]} />
+                    <View style={[styles.mask, { top: boxY + boxH, left: 0, right: 0, bottom: 0 }]} />
+                    <View style={[styles.mask, { top: boxY, left: 0, width: boxX, height: boxH }]} />
+                    <View style={[styles.mask, { top: boxY, right: 0, left: boxX + boxW, height: boxH }]} />
+                    <View style={[styles.draggableFrame, { top: boxY, left: boxX, width: boxW, height: boxH }]} pointerEvents="none">
+                        <View style={styles.scannerFrame}>
+                            <View style={styles.cornerTL} /><View style={styles.cornerTR} /><View style={styles.cornerBL} /><View style={styles.cornerBR} />
+                            <View style={styles.gridV} /><View style={styles.gridV2} /><View style={styles.gridH} /><View style={styles.gridH2} />
                         </View>
-                        <View style={styles.cameraBottom}>
-                            <TouchableOpacity style={[styles.captureButton, isProcessing && { opacity: 0.5 }]} onPress={handleTakePhoto} disabled={isProcessing}>
-                                <View style={styles.captureInner} />
-                            </TouchableOpacity>
-                        </View>
-                    </>
-                )}
-
-                {step === 'crop' && (
-                    <>
-                        <View style={styles.cropContainer}>
-                            <Image source={{ uri: getSafeUri(tempImagePath) }} style={StyleSheet.absoluteFill} resizeMode="cover" />
-                            <View style={styles.fullOverlay} {...panResponder.panHandlers}>
-                                <View style={[styles.mask, { top: 0, left: 0, right: 0, height: boxY }]} />
-                                <View style={[styles.mask, { top: boxY + boxH, left: 0, right: 0, bottom: 0 }]} />
-                                <View style={[styles.mask, { top: boxY, left: 0, width: boxX, height: boxH }]} />
-                                <View style={[styles.mask, { top: boxY, right: 0, left: boxX + boxW, height: boxH }]} />
-                                <View style={[styles.draggableFrame, { top: boxY, left: boxX, width: boxW, height: boxH }]} pointerEvents="none">
-                                    <View style={styles.scannerFrame}>
-                                        <View style={styles.cornerTL} /><View style={styles.cornerTR} /><View style={styles.cornerBL} /><View style={styles.cornerBR} />
-                                        <View style={styles.gridV} /><View style={styles.gridV2} /><View style={styles.gridH} /><View style={styles.gridH2} />
-                                    </View>
-                                </View>
-                            </View>
-                            <View style={styles.cropHeader}>
-                                <Text style={styles.cropInstruction}>Geser & Sesuaikan area ke Plat Nomor</Text>
-                            </View>
-                            <View style={styles.cropActions}>
-                                <TouchableOpacity style={styles.actionButtonCircle} onPress={() => setStep('camera')}>
-                                    <MaterialIcons name="close" size={30} color={Colors.white} />
-                                </TouchableOpacity>
-                                <TouchableOpacity style={[styles.actionButtonCircle, { backgroundColor: Colors.bgOrange }]} onPress={handleApplyCrop} disabled={isProcessing}>
-                                    {isProcessing ? <ActivityIndicator color={Colors.white} /> : <MaterialIcons name="check" size={35} color={Colors.white} />}
-                                </TouchableOpacity>
-                            </View>
-                        </View>
-                    </>
-                )}
-
-                {step === 'edit' && (
-                    <View style={styles.editContainer}>
-                        <Text style={styles.editTitle}>Konfirmasi Hasil OCR</Text>
-                        <View style={styles.inputWrapper}>
-                            <TextInput 
-                                style={styles.input} 
-                                value={capturedPlate} 
-                                onChangeText={(text) => setCapturedPlate(cleanPlateNumber(text))} 
-                                autoCapitalize="characters" 
-                                placeholder="PLAT NOMOR" 
-                            />
-                        </View>
-                        <TouchableOpacity style={styles.confirmButton} onPress={handleConfirm}>
-                            <Text style={styles.confirmText}>TERAPKAN</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.retryButton} onPress={() => setStep('camera')}>
-                            <Text style={styles.retryText}>Ulangi Foto</Text>
-                        </TouchableOpacity>
                     </View>
-                )}
+                </View>
+
+                <View style={styles.header}>
+                    <TouchableOpacity onPress={onClose} style={styles.iconButton}>
+                        <MaterialIcons name="close" size={30} color={Colors.white} />
+                    </TouchableOpacity>
+                    <Text style={styles.headerTitle}>Ambil Foto Kendaraan</Text>
+                    <View style={{ width: 40 }} />
+                </View>
+
+                <View style={styles.cropHeader}>
+                    <Text style={styles.cropInstruction}>Geser area ke Plat Nomor lalu tekan tombol capture</Text>
+                </View>
+
+                <View style={styles.cameraBottom}>
+                    <TouchableOpacity 
+                        style={[styles.captureButton, isProcessing && { opacity: 0.5 }]} 
+                        onPress={handleTakePhoto} 
+                        disabled={isProcessing}
+                    >
+                        {isProcessing ? (
+                            <ActivityIndicator size="large" color={Colors.white} />
+                        ) : (
+                            <View style={styles.captureInner} />
+                        )}
+                    </TouchableOpacity>
+                </View>
             </View>
         </Modal>
     );
@@ -295,7 +245,6 @@ const styles = StyleSheet.create({
     cameraBottom: { position: 'absolute', bottom: 50, alignSelf: 'center' },
     captureButton: { width: 80, height: 80, borderRadius: 40, borderWidth: 5, borderColor: Colors.white, justifyContent: 'center', alignItems: 'center' },
     captureInner: { width: 60, height: 60, borderRadius: 30, backgroundColor: Colors.white },
-    cropContainer: { flex: 1 },
     fullOverlay: { ...StyleSheet.absoluteFillObject },
     mask: { position: 'absolute', backgroundColor: 'rgba(0,0,0,0.6)' },
     draggableFrame: { position: 'absolute', borderWidth: 1, borderColor: Colors.white },
@@ -308,18 +257,8 @@ const styles = StyleSheet.create({
     gridV2: { position: 'absolute', left: '66%', top: 0, bottom: 0, width: 0.5, backgroundColor: 'rgba(255,255,255,0.4)' },
     gridH: { position: 'absolute', top: '33%', left: 0, right: 0, height: 0.5, backgroundColor: 'rgba(255,255,255,0.4)' },
     gridH2: { position: 'absolute', top: '66%', left: 0, right: 0, height: 0.5, backgroundColor: 'rgba(255,255,255,0.4)' },
-    cropHeader: { position: 'absolute', top: 60, left: 0, right: 0, alignItems: 'center' },
-    cropInstruction: { color: Colors.white, backgroundColor: 'rgba(0,0,0,0.5)', paddingHorizontal: 15, paddingVertical: 8, borderRadius: 20, fontSize: 14 },
-    cropActions: { position: 'absolute', bottom: 60, left: 0, right: 0, flexDirection: 'row', justifyContent: 'space-evenly', alignItems: 'center' },
-    actionButtonCircle: { width: 70, height: 70, borderRadius: 35, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: 'rgba(255,255,255,0.2)' },
-    editContainer: { flex: 1, backgroundColor: Colors.white, padding: 30, justifyContent: 'center', alignItems: 'center' },
-    editTitle: { fontSize: 22, fontWeight: 'bold', marginBottom: 30, color: Colors.black },
-    inputWrapper: { width: '100%', borderWidth: 2, borderColor: Colors.bgOrange, borderRadius: 15, paddingHorizontal: 20, marginBottom: 15 },
-    input: { fontSize: 36, fontWeight: 'bold', textAlign: 'center', height: 90, color: Colors.black },
-    confirmButton: { backgroundColor: Colors.bgOrange, width: '100%', padding: 20, borderRadius: 15, alignItems: 'center' },
-    confirmText: { color: Colors.white, fontSize: 18, fontWeight: 'bold' },
-    retryButton: { marginTop: 30, padding: 10 },
-    retryText: { color: Colors.grey, fontSize: 16, textDecorationLine: 'underline' }
+    cropHeader: { position: 'absolute', top: 100, left: 0, right: 0, alignItems: 'center', zIndex: 10 },
+    cropInstruction: { color: Colors.white, backgroundColor: 'rgba(0,0,0,0.5)', paddingHorizontal: 15, paddingVertical: 8, borderRadius: 20, fontSize: 14, textAlign: 'center', marginHorizontal: 20 },
 });
 
 export default PlateOCRModal;
