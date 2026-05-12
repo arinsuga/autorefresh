@@ -332,6 +332,13 @@ export default function TransactionScreen() {
                     setPlateNumber(plate);
                     if (imagePath) setCapturedImage(imagePath);
                     setIsOCRVisible(false);
+                    if (plate) {
+                        showMessage({
+                            message: "OCR Berhasil",
+                            description: `Plat nomor ${plate} berhasil terdeteksi`,
+                            type: "success",
+                        });
+                    }
                 }} 
             />
         </KeyboardAvoidingView>

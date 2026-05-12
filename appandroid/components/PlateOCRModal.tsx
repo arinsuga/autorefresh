@@ -225,19 +225,15 @@ const PlateOCRModal: React.FC<PlateOCRModalProps> = ({ visible, onClose, onCaptu
                         onPress={handleTakePhoto} 
                         disabled={isProcessing}
                     >
-                        {isProcessing ? (
-                            <ActivityIndicator size="large" color={Colors.white} />
-                        ) : (
-                            <View style={styles.captureInner} />
-                        )}
+                        <View style={styles.captureInner} />
                     </TouchableOpacity>
                 </View>
 
                 {isProcessing && (
                     <View style={styles.processingOverlay}>
                         <ActivityIndicator size="large" color={Colors.primary || Colors.white} />
-                        <Text style={styles.processingText}>Memproses gambar...</Text>
-                        <Text style={styles.processingSubText}>Mohon tunggu sebentar</Text>
+                        <Text style={styles.processingText}>Tahan Kamera...</Text>
+                        <Text style={styles.processingSubText}>Sedang memproses plat nomor</Text>
                     </View>
                 )}
             </View>
