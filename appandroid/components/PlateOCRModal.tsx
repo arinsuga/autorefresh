@@ -109,7 +109,7 @@ const PlateOCRModal: React.FC<PlateOCRModalProps> = ({ visible, onClose, onCaptu
             const normalized = await manipulateAsync(
                 getSafeUri(photo.path),
                 [{ resize: { width: 1200 } }], 
-                { compress: 0.8, format: SaveFormat.JPEG }
+                { compress: 0.5, format: SaveFormat.JPEG }
             );
 
             // 2. Perform Cropping Logic

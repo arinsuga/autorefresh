@@ -33,6 +33,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { cleanPlateNumber } from '@/utils/PlateUtils';
 import moment from 'moment';
 import { showMessage } from 'react-native-flash-message';
+import Fileutils from '@/utils/Fileutils';
 
 export default function TransactionScreen() {
     const { authState } = useAuth();
@@ -147,12 +148,22 @@ export default function TransactionScreen() {
                 formData.append('services[0][service_price]', service.service_price.toString());
             }
 
+            console.log("===== Inside submit =====");
+
             if (capturedImage) {
-                const fileName = capturedImage.split('/').pop() || 'transaction.jpg';
+                const filePath = Fileutils.path(capturedImage);
+                const fileName = Fileutils.name(filePath) || 'transaction.jpg';
+                const fileType = Fileutils.type(filePath) || 'image/jpeg';
+                
+                console.log("=== Transaction Upload Debug ===");
+                console.log("URI:", capturedImage);
+                console.log("FileName:", fileName);
+                console.log("FileType:", fileType);
+
                 formData.append('upload', {
                     uri: capturedImage,
                     name: fileName,
-                    type: 'image/jpeg',
+                    type: fileType,
                 } as any);
             }
 

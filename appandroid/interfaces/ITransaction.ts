@@ -2,6 +2,7 @@ import { IBranch } from "./IBranch";
 import { IVehicleType } from "./IVehicleType";
 import { IPaymentMethod } from "./IPaymentMethod";
 import { IServiceType } from "./IServiceType";
+import {PhotoFile} from 'react-native-vision-camera';
 
 export interface ITransactionService {
     id?: number;
@@ -27,6 +28,7 @@ export interface ITransaction {
     net_total: number;
     payment_method_id: number;
     transaction_photo?: string;
+    upload?: PhotoFile | undefined;
     created_by?: string;
     branch?: IBranch;
     vehicle_type?: IVehicleType;

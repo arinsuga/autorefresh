@@ -1,8 +1,10 @@
 import axios from 'axios';
+import { Platform } from 'react-native';
 import { authSubject } from './AuthService';
 
 const ApiService = axios.create({
     baseURL: process.env.EXPO_PUBLIC_APPAPIURL,
+    timeout: 60000, // 60s timeout for large uploads
     headers: {
         'Accept': 'application/json',
     },
@@ -16,9 +18,12 @@ ApiService.interceptors.request.use(
             config.headers.Authorization = `Bearer ${auth.token.token}`;
         }
 
-        // If sending FormData, let the browser/Axios set the Content-Type with boundary
+        // If sending FormData, prevent Axios from serializing it.
+        // React Native's FormData with { uri, name, type } blobs must be
+        // passed through untouched — Axios 1.x transformRequest breaks this.
         if (config.data instanceof FormData) {
             delete config.headers['Content-Type'];
+            config.transformRequest = (data: any) => data;
         } else {
             config.headers['Content-Type'] = 'application/json';
         }

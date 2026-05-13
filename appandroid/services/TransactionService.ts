@@ -1,5 +1,9 @@
+import axios from 'axios';
 import ApiService from './ApiService';
 import { ITransaction } from '@/interfaces/ITransaction';
+import { getToken } from './AuthService';
+
+const API_URL = process.env.EXPO_PUBLIC_APPAPIURL;
 
 const TransactionService = {
     getAll: async (params?: any) => {
@@ -12,9 +16,27 @@ const TransactionService = {
         return response.data.data as ITransaction;
     },
 
-    create: async (data: ITransaction | FormData) => {
-        const response = await ApiService.post('/transactions', data);
-        return response.data.data as ITransaction;
+    create: async (formData: FormData) => {
+        const token = await getToken();
+        try {
+            const response = await axios.post(`${API_URL}/transactions`, formData, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/json',
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
+            return response.data.data as ITransaction;
+        } catch (error: any) {
+            console.log('===== Transaction Create Error =====');
+            if (error.response) {
+                console.log('Status:', error.response.status);
+                console.log('Data:', JSON.stringify(error.response.data, null, 2));
+            } else {
+                console.log('Error Message:', error.message);
+            }
+            throw error;
+        }
     },
 
     update: async (id: number, data: Partial<ITransaction>) => {
