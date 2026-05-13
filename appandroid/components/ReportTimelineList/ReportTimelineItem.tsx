@@ -58,7 +58,7 @@ const ReportTimelineItem = memo(({ item, onPress }: ReportTimelineItemProps) => 
                     <View style={styles.titleGroup}>
                         <Icon.History color={Colors.bgOrange} size={20} />
                         <Text style={styles.itemTitle}>
-                            {item.transaction_number || 'New Transaction'}
+                            {item.transaction_number || 'Transaksi Baru'}
                         </Text>
                     </View>
                     
@@ -71,7 +71,7 @@ const ReportTimelineItem = memo(({ item, onPress }: ReportTimelineItemProps) => 
                             onPress={handleShowImage}
                         >
                             <Text style={styles.imageBtnText}>
-                                {isVisible ? 'Hide' : 'Photo'}
+                                {isVisible ? 'Tutup' : 'Foto'}
                             </Text>
                             {isVisible ? (
                                 <Icon.ArrowUp color={Colors.white} size={16} />

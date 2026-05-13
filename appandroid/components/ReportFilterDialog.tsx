@@ -163,13 +163,13 @@ const ReportFilterDialog = ({
                                     style={[styles.toggleButton, reportType === 'Summary' && styles.toggleButtonActive]}
                                     onPress={() => setReportType('Summary')}
                                 >
-                                    <Text style={[styles.toggleText, reportType === 'Summary' && styles.toggleTextActive]}>Summary</Text>
+                                    <Text style={[styles.toggleText, reportType === 'Summary' && styles.toggleTextActive]}>Ringkasan</Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity 
                                     style={[styles.toggleButton, reportType === 'Detail' && styles.toggleButtonActive]}
                                     onPress={() => setReportType('Detail')}
                                 >
-                                    <Text style={[styles.toggleText, reportType === 'Detail' && styles.toggleTextActive]}>Detail</Text>
+                                    <Text style={[styles.toggleText, reportType === 'Detail' && styles.toggleTextActive]}>Rincian</Text>
                                 </TouchableOpacity>
                             </View>
                         </View>
@@ -206,16 +206,18 @@ const ReportFilterDialog = ({
                                 onSelect={handleToggleVehicle} 
                             />
                         </View>
-
-                        {/* Services */}
-                        <View style={styles.section}>
-                            <ServiceSelector 
-                                services={services} 
-                                selectedServiceIds={selectedServiceIds} 
-                                multiple={true}
-                                onToggle={handleToggleService} 
-                            />
-                        </View>
+                        
+                        {/* Services - Hidden if 'All' vehicle type or 'Summary' report */}
+                        {!selectedVehicleIds.includes(0) && reportType !== 'Summary' && (
+                            <View style={styles.section}>
+                                <ServiceSelector 
+                                    services={services} 
+                                    selectedServiceIds={selectedServiceIds} 
+                                    multiple={true}
+                                    onToggle={handleToggleService} 
+                                />
+                            </View>
+                        )}
                         
                         <View style={{ height: 20 }} />
                     </ScrollView>
@@ -225,12 +227,12 @@ const ReportFilterDialog = ({
                         <View style={styles.actionRow}>
                             <TouchableOpacity style={[styles.actionBtn, styles.viewBtn]} onPress={() => onView(getFilters())}>
                                 <Icon.Eye color={Colors.white} size={20} />
-                                <Text style={styles.actionBtnText}>View</Text>
+                                <Text style={styles.actionBtnText}>Lihat</Text>
                             </TouchableOpacity>
                             
                             <TouchableOpacity style={[styles.actionBtn, styles.printBtn]} onPress={() => onPrint(getFilters())}>
                                 <Icon.Sync color={Colors.white} size={20} />
-                                <Text style={styles.actionBtnText}>Print</Text>
+                                <Text style={styles.actionBtnText}>Cetak</Text>
                             </TouchableOpacity>
 
                             <TouchableOpacity style={[styles.actionBtn, styles.pdfBtn]} onPress={() => onExportPDF(getFilters())}>
@@ -245,7 +247,7 @@ const ReportFilterDialog = ({
                         </View>
                         
                         <TouchableOpacity style={styles.cancelButton} onPress={onCancel}>
-                            <Text style={styles.cancelButtonText}>CANCEL</Text>
+                            <Text style={styles.cancelButtonText}>BATAL</Text>
                         </TouchableOpacity>
                     </View>
                 </View>

@@ -202,7 +202,7 @@ class TransactionRepository extends EloquentRepository implements TransactionRep
                 'vt.vehicle_type_name',
                 'pm.id as payment_method_id',
                 'pm.payment_method_name',
-                't.transaction_dt',
+                DB::raw('DATE(t.transaction_dt) as transaction_dt'),
                 DB::raw('COUNT(t.id) as total_transactions'),
                 DB::raw('IFNULL(SUM(t.gross_total), 0) as total_gross'),
                 DB::raw('IFNULL(SUM(t.discount), 0) as total_discount'),
@@ -210,7 +210,12 @@ class TransactionRepository extends EloquentRepository implements TransactionRep
             );
 
         if (!empty($params['branch_id'])) {
-            $query->where('t.branch_id', $params['branch_id']);
+            $ids = explode(',', $params['branch_id']);
+            $query->whereIn('t.branch_id', $ids);
+        }
+        if (!empty($params['vehicle_type_id'])) {
+            $ids = explode(',', $params['vehicle_type_id']);
+            $query->whereIn('t.vehicle_type_id', $ids);
         }
         if (!empty($params['date_from'])) {
             $query->where('t.transaction_dt', '>=', $params['date_from']);
@@ -218,8 +223,12 @@ class TransactionRepository extends EloquentRepository implements TransactionRep
         if (!empty($params['date_to'])) {
             $query->where('t.transaction_dt', '<=', $params['date_to']);
         }
+        if (!empty($params['date'])) {
+            $query->whereDate('t.transaction_dt', $params['date']);
+        }
         if (!empty($params['payment_method_id'])) {
-            $query->where('t.payment_method_id', $params['payment_method_id']);
+            $ids = explode(',', $params['payment_method_id']);
+            $query->whereIn('t.payment_method_id', $ids);
         }
 
         $groupBy = $params['group_by'] ?? 'date';
@@ -235,7 +244,7 @@ class TransactionRepository extends EloquentRepository implements TransactionRep
                 break;
             case 'date':
             default:
-                $query->groupBy('t.transaction_dt', 'b.id', 'b.branch_name', 'vt.id', 'vt.vehicle_type_name', 'pm.id', 'pm.payment_method_name');
+                $query->groupBy(DB::raw('DATE(t.transaction_dt)'), 'b.id', 'b.branch_name', 'vt.id', 'vt.vehicle_type_name', 'pm.id', 'pm.payment_method_name');
                 break;
         }
 
@@ -262,15 +271,25 @@ class TransactionRepository extends EloquentRepository implements TransactionRep
         }
 
         if (!empty($params['branch_id'])) {
-            $query->where('branch_id', $params['branch_id']);
+            $ids = explode(',', $params['branch_id']);
+            $query->whereIn('branch_id', $ids);
         }
 
         if (!empty($params['vehicle_type_id'])) {
-            $query->where('vehicle_type_id', $params['vehicle_type_id']);
+            $ids = explode(',', $params['vehicle_type_id']);
+            $query->whereIn('vehicle_type_id', $ids);
         }
 
         if (!empty($params['payment_method_id'])) {
-            $query->where('payment_method_id', $params['payment_method_id']);
+            $ids = explode(',', $params['payment_method_id']);
+            $query->whereIn('payment_method_id', $ids);
+        }
+
+        if (!empty($params['service_ids'])) {
+            $ids = explode(',', $params['service_ids']);
+            $query->whereHas('transactionServices', function ($q) use ($ids) {
+                $q->whereIn('service_type_id', $ids);
+            });
         }
 
         if (!empty($params['date_from'])) {
@@ -279,6 +298,10 @@ class TransactionRepository extends EloquentRepository implements TransactionRep
 
         if (!empty($params['date_to'])) {
             $query->whereDate('transaction_dt', '<=', $params['date_to']);
+        }
+
+        if (!empty($params['date'])) {
+            $query->where('transaction_dt', $params['date']);
         }
     }
 }

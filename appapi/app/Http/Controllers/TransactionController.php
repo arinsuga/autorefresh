@@ -106,7 +106,6 @@ class TransactionController extends Controller
 
     public function getReportSummary(Request $request)
     {
-        return response()->json(['$request->all()' => $request->all()], 200);
         $data = $this->repository->getReportSummary($request->all());
         return response()->json(['data' => $data], 200);
     }

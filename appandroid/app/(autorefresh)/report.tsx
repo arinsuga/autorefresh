@@ -45,11 +45,14 @@ export default function ReportScreen() {
     const [isWaiting, setIsWaiting] = useState(false);
     const [isViewMode, setIsViewMode] = useState(false);
     const [showFilter, setShowFilter] = useState(false);
-    
-    const [results, setResults] = useState<ITransaction[]>([]);
+
+    const [reportType, setReportType] = useState<'Summary' | 'Detail'>('Detail');
+    const [results, setResults] = useState<any[]>([]);
 
     const handleSelectedDate = useCallback(async (date: moment.Moment) => {
         setIsWaiting(true);
+        setReportType('Detail');
+        setIsViewMode(false);
         try {
             const params = {
                 date: date.format('YYYY-MM-DD'),
@@ -68,16 +71,24 @@ export default function ReportScreen() {
     const handleRefresh = useCallback(async (viewMode: boolean, parDate: moment.Moment, parDateFrom?: string, parDateTo?: string) => {
         if (viewMode) {
             // Re-run the last filter logic if possible or just refresh period
-            handleView( { dateFrom: parDateFrom, dateTo: parDateTo, branch: authState?.selectedBranch });
+            handleView( { 
+                dateFrom: parDateFrom, 
+                dateTo: parDateTo, 
+                branch: authState?.selectedBranch,
+                reportType: reportType,
+                vehicleIds: [], // We don't have the last full filters here, maybe should store them
+                serviceIds: []
+            });
         } else {
             handleSelectedDate(parDate);
         }
-    }, [handleSelectedDate, authState?.selectedBranch]);
+    }, [handleSelectedDate, authState?.selectedBranch, reportType]);
 
     const handleView = async (filters: any) => {
         setIsViewMode(true);
         setShowFilter(false);
         setIsWaiting(true);
+        setReportType(filters.reportType);
         setSelectedDatePeriod({ dateFrom: filters.dateFrom, dateTo: filters.dateTo });
 
         try {
@@ -85,10 +96,14 @@ export default function ReportScreen() {
                 date_from: filters.dateFrom,
                 date_to: filters.dateTo,
                 branch_id: filters.branch?.id,
-                vehicle_type_id: filters.vehicleIds?.join(','),
+                vehicle_type_id: filters.vehicleIds?.filter((id: number) => id !== 0).join(','),
                 service_ids: filters.serviceIds?.join(',')
             };
-            const data = await TransactionService.getReportDetail(params);
+            
+            const data = filters.reportType === 'Summary' 
+                ? await TransactionService.getReportSummary(params)
+                : await TransactionService.getReportDetail(params);
+                
             setResults(data);
         } catch (error) {
             console.error('Error fetching filtered report', error);
@@ -105,8 +120,20 @@ export default function ReportScreen() {
     const handleExportPDF = async (filters: any) => {
         setIsWaiting(true);
         try {
-            // Use current results if they match filters, or fetch fresh data
-            await ReportExportService.generatePDF(results, filters);
+            // Fetch fresh data for export to ensure it matches current filters
+            const params = {
+                date_from: filters.dateFrom,
+                date_to: filters.dateTo,
+                branch_id: filters.branch?.id,
+                vehicle_type_id: filters.vehicleIds?.filter((id: number) => id !== 0).join(','),
+                service_ids: filters.serviceIds?.join(',')
+            };
+            
+            const data = filters.reportType === 'Summary' 
+                ? await TransactionService.getReportSummary(params)
+                : await TransactionService.getReportDetail(params);
+
+            await ReportExportService.generatePDF(data, filters);
         } catch (error) {
             Alert.alert('Error', 'Failed to generate PDF');
         } finally {
@@ -118,7 +145,20 @@ export default function ReportScreen() {
     const handleExportCSV = async (filters: any) => {
         setIsWaiting(true);
         try {
-            await ReportExportService.generateCSV(results, filters);
+            // Fetch fresh data for export to ensure it matches current filters
+            const params = {
+                date_from: filters.dateFrom,
+                date_to: filters.dateTo,
+                branch_id: filters.branch?.id,
+                vehicle_type_id: filters.vehicleIds?.filter((id: number) => id !== 0).join(','),
+                service_ids: filters.serviceIds?.join(',')
+            };
+            
+            const data = filters.reportType === 'Summary' 
+                ? await TransactionService.getReportSummary(params)
+                : await TransactionService.getReportDetail(params);
+
+            await ReportExportService.generateCSV(data, filters);
         } catch (error) {
             Alert.alert('Error', 'Failed to generate CSV');
         } finally {
@@ -145,7 +185,7 @@ export default function ReportScreen() {
                                 onPress={() => setShowFilter(true)}
                             >
                                 <Icon.Share size={18} color={Colors.white} />
-                                <Text style={styles.actionBtnText}>Share</Text>
+                                <Text style={styles.actionBtnText}>Bagikan</Text>
                             </TouchableOpacity>
                         </View>
                     </>
@@ -160,7 +200,7 @@ export default function ReportScreen() {
                             }}
                         >
                             <Icon.ArrowLeft size={18} color={Colors.white} />
-                            <Text style={styles.backBtnText}>Back</Text>
+                            <Text style={styles.backBtnText}>Kembali</Text>
                         </TouchableOpacity>
                     </>
                 )}
@@ -182,8 +222,9 @@ export default function ReportScreen() {
                     datePeriod={selectedDatePeriod}
                     isViewMode={isViewMode}
                     isRefreshing={isWaiting}
+                    reportType={reportType}
                     onRefresh={handleRefresh}
-                    onItemPress={(item) => Alert.alert('Detail', `Transaction: ${item.transaction_number}`)}
+                    onItemPress={(item) => !isViewMode && Alert.alert('Rincian', `Transaksi: ${item.transaction_number}`)}
                 />
             </View>
 

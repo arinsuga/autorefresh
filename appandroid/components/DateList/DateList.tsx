@@ -21,6 +21,10 @@ const DateList = React.memo((
     const [currentDate, setCurrentDate] = useState(date);
     const [selectedDate, setSelectedDate] = useState(currentDate.clone());
 
+    useEffect(() => {
+        setSelectedDate(date);
+    }, [date]);
+
 
     const handleSelectedDate = async (date: moment.Moment) => {
 
