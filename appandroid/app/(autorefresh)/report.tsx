@@ -53,6 +53,7 @@ export default function ReportScreen() {
         setIsWaiting(true);
         setReportType('Detail');
         setIsViewMode(false);
+        setResults([]); // Clear results to prevent type mismatch during transition
         try {
             const params = {
                 date: date.format('YYYY-MM-DD'),
@@ -88,6 +89,7 @@ export default function ReportScreen() {
         setIsViewMode(true);
         setShowFilter(false);
         setIsWaiting(true);
+        setResults([]); // Clear results to prevent type mismatch during transition
         setReportType(filters.reportType);
         setSelectedDatePeriod({ dateFrom: filters.dateFrom, dateTo: filters.dateTo });
 

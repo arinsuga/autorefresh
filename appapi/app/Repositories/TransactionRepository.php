@@ -301,7 +301,7 @@ class TransactionRepository extends EloquentRepository implements TransactionRep
         }
 
         if (!empty($params['date'])) {
-            $query->where('transaction_dt', $params['date']);
+            $query->whereDate('transaction_dt', $params['date']);
         }
     }
 }

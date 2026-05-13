@@ -24,6 +24,9 @@ interface ISummaryItem {
     total_discount: number | string;
     total_net: number | string;
 }
+interface ReportSummaryItemProps {
+    item: ISummaryItem;
+}
 
 const ReportSummaryItem = memo(({ item }: ReportSummaryItemProps) => {
     return (
@@ -76,7 +79,7 @@ const ReportSummaryItem = memo(({ item }: ReportSummaryItemProps) => {
             <View style={styles.footerRow}>
                 <Text style={styles.totalLabel}>Total Bersih</Text>
                 <Text style={styles.totalValue}>
-                    Rp {Number(item.total_net).toLocaleString('id-ID')}
+                    Rp {Number(item.total_net ?? 0).toLocaleString('id-ID')}
                 </Text>
             </View>
         </View>

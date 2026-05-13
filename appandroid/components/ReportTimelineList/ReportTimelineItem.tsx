@@ -127,7 +127,7 @@ const ReportTimelineItem = memo(({ item, onPress }: ReportTimelineItemProps) => 
                         <Text style={styles.paymentText}>{item.payment_method?.payment_method_name}</Text>
                     </View>
                     <Text style={styles.totalValue}>
-                        Rp {item.net_total.toLocaleString('id-ID')}
+                        Rp {(item.net_total ?? 0).toLocaleString('id-ID')}
                     </Text>
                 </View>
             </View>

@@ -1,5 +1,5 @@
 import React from 'react'
-import { FlatList, RefreshControl, View, StyleSheet, ScrollView } from 'react-native'
+import { FlatList, RefreshControl, View, StyleSheet, ScrollView, Text } from 'react-native'
 import moment from 'moment';
 
 //Constants
@@ -9,6 +9,7 @@ import { Colors } from '@/constants/Colors';
 import { ITransaction } from '@/interfaces/ITransaction';
 
 //Components
+import Icon from '@/components/Icon/Icon';
 import ReportTimelineItem from './ReportTimelineItem';
 import ReportSummaryItem from './ReportSummaryItem';
 import TimelineEmpty from '../TimelineList/TimelineEmpty';
@@ -97,7 +98,7 @@ const ReportTimelineList = ({
 
             <View style={styles.subtotalRow}>
                 <Text style={styles.subtotalLabel}>Subtotal</Text>
-                <Text style={styles.subtotalValue}>Rp {group.subtotal.toLocaleString('id-ID')}</Text>
+                <Text style={styles.subtotalValue}>Rp {(group.subtotal ?? 0).toLocaleString('id-ID')}</Text>
             </View>
         </View>
     );
@@ -124,7 +125,7 @@ const ReportTimelineList = ({
                 {processedData.groups.length > 0 && (
                     <View style={styles.grandTotalContainer}>
                         <Text style={styles.grandTotalLabel}>TOTAL KESELURUHAN</Text>
-                        <Text style={styles.grandTotalValue}>Rp {processedData.grandTotal.toLocaleString('id-ID')}</Text>
+                        <Text style={styles.grandTotalValue}>Rp {(processedData.grandTotal ?? 0).toLocaleString('id-ID')}</Text>
                     </View>
                 )}
 
