@@ -83,19 +83,19 @@ const ReportFilterDialog = ({
         const fetchServices = async () => {
             if (selectedVehicleIds.length === 0) return;
             try {
-                // If "All" is selected (id 0), fetch all active services
-                // Otherwise, fetch services for the first selected vehicle type
-                const sTypes = selectedVehicleIds.includes(0)
-                    ? await ServiceTypeService.getActive()
-                    : await ServiceTypeService.getByVehicleType(selectedVehicleIds[0]);
+                // Fetch all active services
+                const allSTypes = await ServiceTypeService.getActive();
                 
-                setServices(sTypes);
-                // Set first service as default
-                if (sTypes.length > 0) {
-                    setSelectedServiceIds([sTypes[0].id]);
-                } else {
-                    setSelectedServiceIds([]);
-                }
+                // Filter locally based on selected vehicle types
+                const filteredSTypes = selectedVehicleIds.includes(0)
+                    ? allSTypes
+                    : allSTypes.filter(s => selectedVehicleIds.includes(s.vehicle_type_id));
+                
+                setServices(filteredSTypes);
+                
+                // When vehicle selection changes, we should ideally keep previous selections 
+                // but for simplicity and correctness in reports, we select all available for the new filter
+                setSelectedServiceIds(filteredSTypes.map(s => s.id));
             } catch (error) {
                 console.error('Error fetching services', error);
             }
@@ -103,20 +103,36 @@ const ReportFilterDialog = ({
         fetchServices();
     }, [selectedVehicleIds]);
 
-    const getFilters = () => ({
-        reportType,
-        branch: selectedBranch,
-        dateFrom,
-        dateTo,
-        vehicleIds: selectedVehicleIds,
-        serviceIds: selectedServiceIds
-    });
+    const getFilters = () => {
+        // If "All" vehicles selected or Summary report, don't filter by services
+        const effectiveServiceIds = (selectedVehicleIds.includes(0) || reportType === 'Summary')
+            ? [] 
+            : selectedServiceIds;
+
+        return {
+            reportType,
+            branch: selectedBranch,
+            dateFrom,
+            dateTo,
+            vehicleIds: selectedVehicleIds,
+            serviceIds: effectiveServiceIds
+        };
+    };
 
     const handleToggleService = (id: number) => {
+        if (id === -1) {
+            // Deselect all (keep empty for reports, or just first one if required)
+            setSelectedServiceIds([]);
+            return;
+        }
+        if (id === -2) {
+            // Select all
+            setSelectedServiceIds(services.map(s => s.id));
+            return;
+        }
+
         setSelectedServiceIds(prev => {
             if (prev.includes(id)) {
-                // Don't allow deselecting if it's the last one
-                if (prev.length === 1) return prev;
                 return prev.filter(i => i !== id);
             }
             return [...prev, id];

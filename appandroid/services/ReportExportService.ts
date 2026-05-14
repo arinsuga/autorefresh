@@ -6,7 +6,14 @@ import { ITransaction } from '@/interfaces/ITransaction';
 
 const ReportExportService = {
     generatePDF: async (data: any[], filters: any) => {
-        const title = `Laporan ${filters.reportType} - ${filters.branch?.branch_name || 'Semua Cabang'}`;
+        const reportTypeName = filters.reportType === 'Summary' ? 'Ringkasan' : 'Rincian';
+        let title = `Laporan ${reportTypeName}`;
+        const isAllBranches = !filters.branch || filters.branch.id === 'all' || filters.branch.id === 0;
+
+        if (!isAllBranches && filters.branch?.branch_name) {
+            title += ` - ${filters.branch.branch_name}`;
+        }
+
         const period = `${filters.dateFrom} s/d ${filters.dateTo}`;
         
         let tableHeader = '';
@@ -14,35 +21,83 @@ const ReportExportService = {
         let totalRevenue = 0;
 
         if (filters.reportType === 'Summary') {
+            // Grouping logic for Summary: Branch -> Vehicle Type
+            const groupedByBranch: any = {};
+            data.forEach(item => {
+                const bName = item.branch_name || 'Lainnya';
+                const vName = item.vehicle_type_name || 'Lainnya';
+                if (!groupedByBranch[bName]) groupedByBranch[bName] = {};
+                if (!groupedByBranch[bName][vName]) {
+                    groupedByBranch[bName][vName] = { trx: 0, total: 0 };
+                }
+                groupedByBranch[bName][vName].trx += Number(item.total_transactions || 0);
+                groupedByBranch[bName][vName].total += Number(item.total_net || 0);
+            });
+
             tableHeader = `
                 <tr>
-                    <th>No</th>
-                    <th>Cabang</th>
+                    <th style="width: 40px; text-align: center;">No</th>
                     <th>Kendaraan</th>
-                    <th>Metode Bayar</th>
-                    <th>Tanggal</th>
-                    <th style="text-align: center;">Jumlah Trx</th>
-                    <th style="text-align: right;">Total Bersih (Rp)</th>
+                    <th style="text-align: center; width: 100px;">Jumlah Trx</th>
+                    <th style="text-align: right; width: 150px;">Total (Rp)</th>
                 </tr>
             `;
-            data.forEach((item, index) => {
-                totalRevenue += Number(item.total_net);
-                tableRows += `
-                    <tr>
-                        <td>${index + 1}</td>
-                        <td>${item.branch_name}</td>
-                        <td>${item.vehicle_type_name}</td>
-                        <td>${item.payment_method_name}</td>
-                        <td>${item.transaction_dt}</td>
-                        <td style="text-align: center;">${item.total_transactions}</td>
-                        <td style="text-align: right;">${Number(item.total_net).toLocaleString('id-ID')}</td>
-                    </tr>
-                `;
-            });
+
+            if (!isAllBranches) {
+                // Specific branch
+                const bName = filters.branch.branch_name;
+                const vehicles = groupedByBranch[bName] || {};
+                Object.keys(vehicles).sort().forEach((vName, idx) => {
+                    const info = vehicles[vName];
+                    totalRevenue += info.total;
+                    tableRows += `
+                        <tr>
+                            <td style="text-align: center;">${idx + 1}</td>
+                            <td>${vName}</td>
+                            <td style="text-align: center;">${info.trx}</td>
+                            <td style="text-align: right;">${info.total.toLocaleString('id-ID')}</td>
+                        </tr>
+                    `;
+                });
+            } else {
+                // All branches: Group by branch subtitle
+                Object.keys(groupedByBranch).sort().forEach((bName) => {
+                    tableRows += `
+                        <tr style="background-color: #f9f9f9;">
+                            <td colspan="4" style="font-weight: bold; padding: 10px; color: #D16224; border-top: 1px solid #ddd;">Cabang: ${bName}</td>
+                        </tr>
+                    `;
+                    const vehicles = groupedByBranch[bName];
+                    let branchTrx = 0;
+                    let branchTotal = 0;
+                    Object.keys(vehicles).sort().forEach((vName, idx) => {
+                        const info = vehicles[vName];
+                        branchTrx += info.trx;
+                        branchTotal += info.total;
+                        totalRevenue += info.total;
+                        tableRows += `
+                            <tr>
+                                <td style="text-align: center;">${idx + 1}</td>
+                                <td>${vName}</td>
+                                <td style="text-align: center;">${info.trx}</td>
+                                <td style="text-align: right;">${info.total.toLocaleString('id-ID')}</td>
+                            </tr>
+                        `;
+                    });
+                    tableRows += `
+                        <tr style="font-weight: bold; background-color: #f0f0f0;">
+                            <td colspan="2" style="text-align: right; padding: 8px;">Subtotal ${bName}</td>
+                            <td style="text-align: center;">${branchTrx}</td>
+                            <td style="text-align: right;">${branchTotal.toLocaleString('id-ID')}</td>
+                        </tr>
+                    `;
+                });
+            }
         } else {
+            // Detail Report (Rincian)
             tableHeader = `
                 <tr>
-                    <th>No</th>
+                    <th style="width: 30px; text-align: center;">No</th>
                     <th>No. Trx</th>
                     <th>Tanggal</th>
                     <th>No. Polisi</th>
@@ -58,7 +113,7 @@ const ReportExportService = {
                 
                 tableRows += `
                     <tr>
-                        <td>${index + 1}</td>
+                        <td style="text-align: center;">${index + 1}</td>
                         <td>${trx.transaction_number}</td>
                         <td>${trx.transaction_dt}</td>
                         <td>${trx.plate_number}</td>
@@ -103,7 +158,6 @@ const ReportExportService = {
                 </table>
                 <div class="footer">
                     <p class="total">Total Bersih Keseluruhan: Rp ${totalRevenue.toLocaleString('id-ID')}</p>
-                    <p>Jumlah Baris: ${data.length}</p>
                 </div>
             </body>
             </html>
@@ -139,10 +193,31 @@ const ReportExportService = {
         let rows = '';
 
         if (filters.reportType === 'Summary') {
-            header = 'No,Cabang,Kendaraan,Metode Bayar,Tanggal,Jumlah Trx,Total Bersih (Rp)\n';
-            rows = data.map((item, index) => {
-                return `${index + 1},${item.branch_name},${item.vehicle_type_name},${item.payment_method_name},${item.transaction_dt},${item.total_transactions},${item.total_net}`;
-            }).join('\n');
+            // Apply similar grouping logic for CSV
+            const groupedByBranch: any = {};
+            data.forEach(item => {
+                const bName = item.branch_name || 'Lainnya';
+                const vName = item.vehicle_type_name || 'Lainnya';
+                if (!groupedByBranch[bName]) groupedByBranch[bName] = {};
+                if (!groupedByBranch[bName][vName]) {
+                    groupedByBranch[bName][vName] = { trx: 0, total: 0 };
+                }
+                groupedByBranch[bName][vName].trx += Number(item.total_transactions || 0);
+                groupedByBranch[bName][vName].total += Number(item.total_net || 0);
+            });
+
+            header = 'No,Cabang,Kendaraan,Jumlah Trx,Total (Rp)\n';
+            let csvRows: string[] = [];
+            let globalIndex = 1;
+
+            Object.keys(groupedByBranch).sort().forEach(bName => {
+                const vehicles = groupedByBranch[bName];
+                Object.keys(vehicles).sort().forEach(vName => {
+                    const info = vehicles[vName];
+                    csvRows.push(`${globalIndex++},${bName},${vName},${info.trx},${info.total}`);
+                });
+            });
+            rows = csvRows.join('\n');
         } else {
             header = 'No,No. Trx,Tanggal,No. Polisi,Kendaraan,Layanan,Metode Bayar,Total Bersih (Rp)\n';
             rows = data.map((trx: ITransaction, index) => {

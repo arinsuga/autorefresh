@@ -1,19 +1,15 @@
 import React, { useState, useRef, useMemo } from 'react';
-import { View, Text, StyleSheet, Modal, TouchableOpacity, TextInput, Dimensions, Alert, Platform, ActivityIndicator, PanResponder, Image } from 'react-native';
+import { View, Text, StyleSheet, Modal, TouchableOpacity, Dimensions, Alert, PanResponder } from 'react-native';
 import { Colors } from '@/constants/Colors';
 import { Camera, useCameraDevice } from 'react-native-vision-camera';
 import { MaterialIcons } from '@expo/vector-icons';
-import { cleanPlateNumber, formatPlateNumber } from '@/utils/PlateUtils';
-import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
-
-import TextRecognition from 'react-native-text-recognition';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 interface PlateOCRModalProps {
     visible: boolean;
     onClose: () => void;
-    onCapture: (plate: string, imagePath?: string) => void;
+    onCapture: (imagePath: string, cropData: { x: number, y: number, w: number, h: number }) => void;
 }
 
 const PlateOCRModal: React.FC<PlateOCRModalProps> = ({ visible, onClose, onCapture }) => {
@@ -91,91 +87,26 @@ const PlateOCRModal: React.FC<PlateOCRModalProps> = ({ visible, onClose, onCaptu
         }
     }, [visible]);
 
-    const getSafeUri = (path: string) => {
-        if (!path) return '';
-        return path.startsWith('file://') ? path : 'file://' + path;
-    };
-
     const handleTakePhoto = async () => {
-        if (!cameraRef.current) return;
+        if (!cameraRef.current || isProcessing) return;
+        
         try {
+            // Prevent multiple taps
             setIsProcessing(true);
-            const photo = await cameraRef.current.takePhoto({ 
+            
+            // Using takeSnapshot is significantly faster than takePhoto (< 200ms vs 1-2s)
+            // It captures the current frame from the preview stream.
+            const photo = await cameraRef.current.takeSnapshot({
                 flash: 'off',
-                qualityPrioritization: 'speed'
             });
             
-            // 1. Resize/Normalize full photo
-            const normalized = await manipulateAsync(
-                getSafeUri(photo.path),
-                [{ resize: { width: 1200 } }], 
-                { compress: 0.5, format: SaveFormat.JPEG }
-            );
-
-            // 2. Perform Cropping Logic
-            const { x, y, w, h } = boxState.current;
-            const pW = normalized.width;
-            const pH = normalized.height;
-            const screenAspect = SCREEN_WIDTH / SCREEN_HEIGHT;
-            const photoAspect = pW / pH;
-
-            let scale, offsetX = 0, offsetY = 0;
-            if (photoAspect > screenAspect) {
-                scale = pH / SCREEN_HEIGHT;
-                offsetX = (pW - (SCREEN_WIDTH * scale)) / 2;
-            } else {
-                scale = pW / SCREEN_WIDTH;
-                offsetY = (pH - (SCREEN_HEIGHT * scale)) / 2;
-            }
-
-            const cropX = (x * scale) + offsetX;
-            const cropY = (y * scale) + offsetY;
-            const cropW = w * scale;
-            const cropH = h * scale;
-
-            const cropped = await manipulateAsync(
-                normalized.uri,
-                [
-                    {
-                        crop: {
-                            originX: Math.max(0, Math.floor(cropX)),
-                            originY: Math.max(0, Math.floor(cropY)),
-                            width: Math.min(Math.floor(cropW), pW - Math.floor(cropX)),
-                            height: Math.min(Math.floor(cropH), pH - Math.floor(cropY)),
-                        },
-                    },
-                ],
-                { compress: 1.0, format: SaveFormat.JPEG }
-            );
-
-            // 3. OCR
-            const cleanPath = Platform.OS === 'android' ? cropped.uri.replace('file://', '') : cropped.uri;
-            const result = await TextRecognition.recognize(cleanPath);
-            
-            let bestCandidate = '';
-            if (result && result.length > 0) {
-                let highestScore = -1;
-                result.forEach(line => {
-                    const cleanedLine = cleanPlateNumber(line);
-                    if (!cleanedLine) return;
-                    let score = 0;
-                    if (/^[A-Z]{1,2}\d{1,4}[A-Z]{1,3}$/.test(cleanedLine)) score += 100;
-                    else if (/^[A-Z]{1,2}\d{1,4}/.test(cleanedLine)) score += 50;
-                    if (cleanedLine.length >= 4 && cleanedLine.length <= 9) score += 20;
-                    if (score > highestScore) {
-                        highestScore = score;
-                        bestCandidate = cleanedLine;
-                    }
-                });
-                if (!bestCandidate) bestCandidate = result[0];
-            }
-            
-            // 4. Return result
-            onCapture(formatPlateNumber(bestCandidate || ''), normalized.uri);
-            onClose();
+            // Return raw path and crop data immediately
+            onCapture(photo.path, boxState.current);
+            // We don't call onClose() here because the parent's onCapture already handles closing
+            // This avoids double state updates and potential UI lag.
         } catch (e) {
-            Alert.alert('Error', 'Gagal mengambil atau memproses gambar');
-        } finally {
+            console.error('Capture Error:', e);
+            Alert.alert('Error', 'Gagal mengambil gambar');
             setIsProcessing(false);
         }
     };
@@ -228,14 +159,6 @@ const PlateOCRModal: React.FC<PlateOCRModalProps> = ({ visible, onClose, onCaptu
                         <View style={styles.captureInner} />
                     </TouchableOpacity>
                 </View>
-
-                {isProcessing && (
-                    <View style={styles.processingOverlay}>
-                        <ActivityIndicator size="large" color={Colors.primary || Colors.white} />
-                        <Text style={styles.processingText}>Tahan Kamera...</Text>
-                        <Text style={styles.processingSubText}>Sedang memproses plat nomor</Text>
-                    </View>
-                )}
             </View>
         </Modal>
     );
@@ -263,9 +186,6 @@ const styles = StyleSheet.create({
     gridH2: { position: 'absolute', top: '66%', left: 0, right: 0, height: 0.5, backgroundColor: 'rgba(255,255,255,0.4)' },
     cropHeader: { position: 'absolute', top: 100, left: 0, right: 0, alignItems: 'center', zIndex: 10 },
     cropInstruction: { color: Colors.white, backgroundColor: 'rgba(0,0,0,0.5)', paddingHorizontal: 15, paddingVertical: 8, borderRadius: 20, fontSize: 14, textAlign: 'center', marginHorizontal: 20 },
-    processingOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.8)', justifyContent: 'center', alignItems: 'center', zIndex: 20 },
-    processingText: { color: Colors.white, fontSize: 18, fontWeight: 'bold', marginTop: 20, textAlign: 'center' },
-    processingSubText: { color: Colors.lightGray || '#ccc', fontSize: 14, marginTop: 10, textAlign: 'center', paddingHorizontal: 40 },
 });
 
 export default PlateOCRModal;

@@ -9,7 +9,9 @@ import {
     Alert,
     KeyboardAvoidingView,
     Platform,
-    Image
+    Image,
+    Dimensions,
+    ActivityIndicator
 } from 'react-native';
 import { Stack, useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { useCallback } from 'react';
@@ -30,10 +32,15 @@ import ServiceSelector from '@/components/ServiceSelector';
 import BranchSelector from '@/components/BranchSelector';
 import PlateOCRModal from '@/components/PlateOCRModal';
 import { MaterialIcons } from '@expo/vector-icons';
-import { cleanPlateNumber } from '@/utils/PlateUtils';
+import { cleanPlateNumber, formatPlateNumber } from '@/utils/PlateUtils';
 import moment from 'moment';
 import { showMessage } from 'react-native-flash-message';
 import Fileutils from '@/utils/Fileutils';
+import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
+import TextRecognition from 'react-native-text-recognition';
+import * as FileSystem from 'expo-file-system';
+
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 export default function TransactionScreen() {
     const { authState } = useAuth();
@@ -54,6 +61,8 @@ export default function TransactionScreen() {
     const [selectedPaymentMethodId, setSelectedPaymentMethodId] = useState<number | null>(null);
     const [isOCRVisible, setIsOCRVisible] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [ocrStatus, setOcrStatus] = useState<'idle' | 'processing' | 'success' | 'failed'>('idle');
+    const [ocrMessage, setOcrMessage] = useState('');
 
     const { autoOpenScanner } = useLocalSearchParams();
     
@@ -105,6 +114,94 @@ export default function TransactionScreen() {
         return service ? service.service_price : 0;
     };
 
+    const processOCR = async (imagePath: string, cropData: { x: number, y: number, w: number, h: number }) => {
+        setOcrStatus('processing');
+        setOcrMessage('Sedang memproses plat nomor...');
+        
+        try {
+            const uri = imagePath.startsWith('file://') ? imagePath : `file://${imagePath}`;
+            
+            // 1. Normalize full photo to a consistent size for cropping logic
+            const normalized = await manipulateAsync(
+                uri,
+                [{ resize: { width: 1200 } }], 
+                { compress: 0.8, format: SaveFormat.JPEG }
+            );
+
+            // 2. Perform Cropping Logic
+            const { x, y, w, h } = cropData;
+            const pW = normalized.width;
+            const pH = normalized.height;
+            const screenAspect = SCREEN_WIDTH / SCREEN_HEIGHT;
+            const photoAspect = pW / pH;
+
+            let scale, offsetX = 0, offsetY = 0;
+            if (photoAspect > screenAspect) {
+                scale = pH / SCREEN_HEIGHT;
+                offsetX = (pW - (SCREEN_WIDTH * scale)) / 2;
+            } else {
+                scale = pW / SCREEN_WIDTH;
+                offsetY = (pH - (SCREEN_HEIGHT * scale)) / 2;
+            }
+
+            const cropX = (x * scale) + offsetX;
+            const cropY = (y * scale) + offsetY;
+            const cropW = w * scale;
+            const cropH = h * scale;
+
+            const cropped = await manipulateAsync(
+                normalized.uri,
+                [
+                    {
+                        crop: {
+                            originX: Math.max(0, Math.floor(cropX)),
+                            originY: Math.max(0, Math.floor(cropY)),
+                            width: Math.min(Math.floor(cropW), pW - Math.floor(cropX)),
+                            height: Math.min(Math.floor(cropH), pH - Math.floor(cropY)),
+                        },
+                    },
+                ],
+                { compress: 1.0, format: SaveFormat.JPEG }
+            );
+
+            // 3. OCR
+            const cleanPath = Platform.OS === 'android' ? cropped.uri.replace('file://', '') : cropped.uri;
+            const result = await TextRecognition.recognize(cleanPath);
+            
+            let bestCandidate = '';
+            if (result && result.length > 0) {
+                let highestScore = -1;
+                result.forEach(line => {
+                    const cleanedLine = cleanPlateNumber(line);
+                    if (!cleanedLine) return;
+                    let score = 0;
+                    if (/^[A-Z]{1,2}\d{1,4}[A-Z]{1,3}$/.test(cleanedLine)) score += 100;
+                    else if (/^[A-Z]{1,2}\d{1,4}/.test(cleanedLine)) score += 50;
+                    if (cleanedLine.length >= 4 && cleanedLine.length <= 9) score += 20;
+                    if (score > highestScore) {
+                        highestScore = score;
+                        bestCandidate = cleanedLine;
+                    }
+                });
+                if (!bestCandidate) bestCandidate = result[0];
+            }
+            
+            const detectedPlate = formatPlateNumber(bestCandidate || '');
+            if (detectedPlate) {
+                setPlateNumber(detectedPlate);
+                setOcrStatus('success');
+                setOcrMessage(`Terdeteksi: ${detectedPlate}`);
+            } else {
+                setOcrStatus('failed');
+                setOcrMessage('Gagal mendeteksi plat nomor');
+            }
+        } catch (error) {
+            console.error('OCR Background Error:', error);
+            setOcrStatus('failed');
+            setOcrMessage('Gagal memproses gambar');
+        }
+    };
+
     const handleSubmit = async () => {
         if (!selectedBranch) {
             Alert.alert('Validation Error', 'Silahkan pilih cabang terlebih dahulu');
@@ -151,17 +248,36 @@ export default function TransactionScreen() {
             console.log("===== Inside submit =====");
 
             if (capturedImage) {
-                const filePath = Fileutils.path(capturedImage);
+                let uploadUri = capturedImage;
+                
+                // 1. Check file size and compress if needed (must be under 1MB)
+                try {
+                    const fileInfo = await FileSystem.getInfoAsync(capturedImage);
+                    if (fileInfo.exists && fileInfo.size > 1024 * 1024) {
+                        console.log(`Compressing image: ${fileInfo.size} bytes`);
+                        const compressed = await manipulateAsync(
+                            capturedImage,
+                            [{ resize: { width: 1024 } }],
+                            { compress: 0.6, format: SaveFormat.JPEG }
+                        );
+                        uploadUri = compressed.uri;
+                        console.log(`Compressed to: ${compressed.width}x${compressed.height}`);
+                    }
+                } catch (e) {
+                    console.warn('Failed to check size or compress', e);
+                }
+
+                const filePath = Fileutils.path(uploadUri);
                 const fileName = Fileutils.name(filePath) || 'transaction.jpg';
                 const fileType = Fileutils.type(filePath) || 'image/jpeg';
                 
                 console.log("=== Transaction Upload Debug ===");
-                console.log("URI:", capturedImage);
+                console.log("URI:", uploadUri);
                 console.log("FileName:", fileName);
                 console.log("FileType:", fileType);
 
                 formData.append('upload', {
-                    uri: capturedImage,
+                    uri: uploadUri,
                     name: fileName,
                     type: fileType,
                 } as any);
@@ -241,17 +357,46 @@ export default function TransactionScreen() {
                             <MaterialIcons name="camera-alt" size={24} color={Colors.white} />
                         </TouchableOpacity>
                     </View>
+                    {ocrStatus !== 'idle' && (
+                        <View style={styles.ocrStatusContainer}>
+                            {ocrStatus === 'processing' && <ActivityIndicator size="small" color={Colors.bgOrange} style={{ marginRight: 8 }} />}
+                            {ocrStatus === 'success' && <MaterialIcons name="check-circle" size={16} color={Colors.green || '#4CAF50'} style={{ marginRight: 8 }} />}
+                            {ocrStatus === 'failed' && <MaterialIcons name="error" size={16} color={Colors.red || '#F44336'} style={{ marginRight: 8 }} />}
+                            <Text style={[
+                                styles.ocrStatusText,
+                                ocrStatus === 'success' && { color: Colors.green || '#4CAF50' },
+                                ocrStatus === 'failed' && { color: Colors.red || '#F44336' },
+                                ocrStatus === 'processing' && { color: Colors.bgOrange }
+                            ]}>
+                                {ocrMessage}
+                            </Text>
+                        </View>
+                    )}
                     <Text style={styles.inputHint}>Dapat diedit jika hasil scan kurang akurat</Text>
                 </View>
 
                 {capturedImage && (
                     <View style={styles.formSection}>
-                        <Text style={styles.label}>Foto Kendaraan</Text>
+                        <View style={styles.labelRow}>
+                            <Text style={styles.label}>Foto Kendaraan</Text>
+                        </View>
                         <View style={styles.imagePreviewContainer}>
                             <Image source={{ uri: capturedImage }} style={styles.imagePreview} />
+                            
+                            {ocrStatus === 'processing' && (
+                                <View style={styles.imageProcessingOverlay}>
+                                    <ActivityIndicator size="large" color={Colors.white} />
+                                    <Text style={styles.imageProcessingText}>Scanning Plate...</Text>
+                                </View>
+                            )}
+
                             <TouchableOpacity 
                                 style={styles.removeImageButton}
-                                onPress={() => setCapturedImage(null)}
+                                onPress={() => {
+                                    setCapturedImage(null);
+                                    setOcrStatus('idle');
+                                    setOcrMessage('');
+                                }}
                             >
                                 <MaterialIcons name="close" size={20} color={Colors.white} />
                             </TouchableOpacity>
@@ -339,17 +484,14 @@ export default function TransactionScreen() {
             <PlateOCRModal 
                 visible={isOCRVisible} 
                 onClose={() => setIsOCRVisible(false)} 
-                onCapture={(plate, imagePath) => {
-                    setPlateNumber(plate);
-                    if (imagePath) setCapturedImage(imagePath);
+                onCapture={(imagePath, cropData) => {
+                    const uri = imagePath.startsWith('file://') ? imagePath : `file://${imagePath}`;
+                    setCapturedImage(uri);
                     setIsOCRVisible(false);
-                    if (plate) {
-                        showMessage({
-                            message: "OCR Berhasil",
-                            description: `Plat nomor ${plate} berhasil terdeteksi`,
-                            type: "success",
-                        });
-                    }
+                    // Start OCR in next tick to allow modal closing animation to be smooth
+                    setTimeout(() => {
+                        processOCR(uri, cropData);
+                    }, 100);
                 }} 
             />
         </KeyboardAvoidingView>
@@ -547,5 +689,37 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
         letterSpacing: 1,
+    },
+    ocrStatusContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginTop: 5,
+    },
+    ocrStatusText: {
+        fontSize: 13,
+        fontWeight: '600',
+    },
+    labelRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 10,
+    },
+    ocrLabelStatus: {
+        fontSize: 12,
+        color: Colors.bgOrange,
+        fontStyle: 'italic',
+    },
+    imageProcessingOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    imageProcessingText: {
+        color: Colors.white,
+        marginTop: 10,
+        fontWeight: 'bold',
+        fontSize: 16,
     }
 });

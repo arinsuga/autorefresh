@@ -51,9 +51,33 @@ const ServiceSelector: React.FC<ServiceSelectorProps> = ({
         );
     };
 
+    const isAllSelected = services.length > 0 && selectedServiceIds.length === services.length;
+
+    const handleSelectAll = () => {
+        if (!onToggle) return;
+        if (isAllSelected) {
+            // Deselect all except the first one (or keep empty if allowed)
+            // For reports, empty usually means "All" in getFilters, 
+            // but here we keep at least one to show something is selected if they want to filter.
+            // Actually, for reports, let's allow empty or just select the first one.
+            if (services.length > 0) onToggle(-1); // special id for clear all
+        } else {
+            if (services.length > 0) onToggle(-2); // special id for select all
+        }
+    };
+
     return (
         <View style={styles.container}>
-            <Text style={styles.label}>Pilih Jasa Cuci</Text>
+            <View style={styles.headerRow}>
+                <Text style={styles.label}>Pilih Jasa Cuci</Text>
+                {multiple && services.length > 0 && (
+                    <TouchableOpacity onPress={handleSelectAll}>
+                        <Text style={styles.selectAllText}>
+                            {isAllSelected ? 'Hapus Semua' : 'Pilih Semua'}
+                        </Text>
+                    </TouchableOpacity>
+                )}
+            </View>
             <FlatList
                 data={services}
                 keyExtractor={(item) => item.id.toString()}
@@ -75,7 +99,17 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
         color: Colors.black,
+    },
+    headerRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
         marginBottom: 10,
+    },
+    selectAllText: {
+        color: Colors.bgOrange,
+        fontSize: 14,
+        fontWeight: '600',
     },
     item: {
         flexDirection: 'row',
