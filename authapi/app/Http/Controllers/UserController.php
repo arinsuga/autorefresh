@@ -47,8 +47,8 @@ class UserController extends Controller
     public function index()
     {
         $currentUser = JWTAuth::user();
-        // MASTER and SUPER can see user list
-        if (!$this->isMaster() && !$this->isSuper()) {
+        // MASTER, SUPER and ADMIN can see user list
+        if (!$this->isMaster() && !$this->isSuper() && !$this->isAdmin()) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -59,6 +59,13 @@ class UserController extends Controller
         if (in_array(Roles::super(), $currentUserRoles) && !in_array(Roles::master(), $currentUserRoles)) {
             $query->whereDoesntHave('roles', function ($q) {
                 $q->where('code', Roles::master());
+            });
+        }
+
+        // If user is arf-admin, exclude mstrole and arf-super users
+        if (in_array(Roles::admin(), $currentUserRoles) && !in_array(Roles::master(), $currentUserRoles) && !in_array(Roles::super(), $currentUserRoles)) {
+            $query->whereDoesntHave('roles', function ($q) {
+                $q->whereIn('code', [Roles::master(), Roles::super()]);
             });
         }
 
@@ -104,6 +111,7 @@ class UserController extends Controller
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:6',
             'roles' => 'array',
+            'app_id' => 'integer',
         ]);
 
         if ($validator->fails()) {
@@ -118,7 +126,12 @@ class UserController extends Controller
         ]);
 
         if ($request->has('roles')) {
-            $user->roles()->sync($request->roles);
+            $syncData = [];
+            $appId = $request->input('app_id', 1); // Default to app 1
+            foreach ($request->roles as $roleId) {
+                $syncData[$roleId] = ['app_id' => $appId];
+            }
+            $user->roles()->sync($syncData);
         }
 
         $user->load('roles');
@@ -150,6 +163,7 @@ class UserController extends Controller
             'name' => 'string|max:255',
             'email' => 'string|email|max:255|unique:users,email,' . $id,
             'roles' => 'array',
+            'app_id' => 'integer',
         ]);
 
         if ($validator->fails()) {
@@ -171,7 +185,12 @@ class UserController extends Controller
                 return response()->json(['message' => 'Only Master can change masterrole assignments'], 403);
             }
 
-            $user->roles()->sync($newRoleIds);
+            $syncData = [];
+            $appId = $request->input('app_id', 1);
+            foreach ($newRoleIds as $roleId) {
+                $syncData[$roleId] = ['app_id' => $appId];
+            }
+            $user->roles()->sync($syncData);
         }
 
         $user->load('roles');
@@ -209,7 +228,7 @@ class UserController extends Controller
 
     public function resetPassword(Request $request, $id)
     {
-        if (!$this->isMaster() && !$this->isSuper()) {
+        if (!$this->isMaster() && !$this->isSuper() && !$this->isAdmin()) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -223,6 +242,14 @@ class UserController extends Controller
             $targetRoles = $user->roles->pluck('code')->toArray();
             if (in_array(Roles::master(), $targetRoles)) {
                 return response()->json(['message' => 'Super cannot reset Master password'], 403);
+            }
+        }
+
+        // ADMIN cannot reset MASTER or SUPER password
+        if ($this->isAdmin() && !$this->isMaster() && !$this->isSuper()) {
+            $targetRoles = $user->roles->pluck('code')->toArray();
+            if (in_array(Roles::master(), $targetRoles) || in_array(Roles::super(), $targetRoles)) {
+                return response()->json(['message' => 'Admin cannot reset Master or Super password'], 403);
             }
         }
 
@@ -261,13 +288,22 @@ class UserController extends Controller
         return response()->json(['data' => $user], 200);
     }
 
-    public function getRoles()
+    public function getRoles(Request $request)
     {
+        $appId = $request->input('app_id');
+        error_log('getRoles request app_id: ' . ($appId ?? 'NULL'));
+        
         if (!$this->isMaster() && !$this->isSuper()) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        $roles = Role::all();
+        if ($appId) {
+            $roles = Role::where('app_id', $appId)->get();
+        } else {
+            $roles = Role::all();
+        }
+        
+        error_log('getRoles count: ' . count($roles));
         return response()->json(['data' => $roles], 200);
     }
 

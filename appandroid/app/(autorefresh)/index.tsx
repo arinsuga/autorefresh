@@ -6,7 +6,8 @@ import { Colors } from '@/constants/Colors';
 import StatsCard from '@/components/StatsCard';
 import TransactionService from '@/services/TransactionService';
 import { MaterialIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { Stack, useRouter, useFocusEffect } from 'expo-router';
+import { useCallback } from 'react';
 import moment from 'moment';
 import { Camera } from 'react-native-vision-camera';
 import Roles from '@/constants/Roles';
@@ -33,9 +34,6 @@ export default function AutoRefreshDashboard() {
     });
 
     const fetchData = async () => {
-        // Temporarily disabled server fetching for OCR testing
-        return;
-        /*
         try {
             const startOfMonth = moment().startOf('month').format('YYYY-MM-DD');
             const endOfMonth = moment().endOf('month').format('YYYY-MM-DD');
@@ -77,7 +75,6 @@ export default function AutoRefreshDashboard() {
         } catch (error) {
             console.error('Failed to fetch dashboard stats', error);
         }
-        */
     };
 
     useEffect(() => {
@@ -86,11 +83,13 @@ export default function AutoRefreshDashboard() {
         }
     }, [canSeeDashboard]);
 
-    useEffect(() => {
-        if (canSeeDashboard) {
-            fetchData();
-        }
-    }, [authState]);
+    useFocusEffect(
+        useCallback(() => {
+            if (authState?.authenticated && canSeeDashboard) {
+                fetchData();
+            }
+        }, [authState, canSeeDashboard])
+    );
 
     const onRefresh = async () => {
         setRefreshing(true);

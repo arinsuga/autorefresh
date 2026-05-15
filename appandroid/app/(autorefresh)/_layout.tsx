@@ -23,6 +23,13 @@ export default function AutoRefreshLayout() {
     const canAccessDashboard = isMaster || isSuper;
     const canAccessReports = isMaster || isSuper;
     const canAccessHistory = isAdmin;
+    
+    // Auth guard - Redirect to login if not authenticated
+    React.useEffect(() => {
+        if (authState?.authenticated === false) {
+            router.replace('/login');
+        }
+    }, [authState?.authenticated]);
 
     const handleLogout = () => {
         Alert.alert(
@@ -98,8 +105,8 @@ export default function AutoRefreshLayout() {
                 <Tabs.Screen
                     name="profile"
                     options={{
-                        title: isSuper ? 'Pengaturan' : 'Profil Pengguna',
-                        tabBarIcon: ({ color }) => <MaterialIcons name={isSuper ? "settings" : "person"} size={28} color={color} />,
+                        title: (isMaster || isSuper) ? 'Pengaturan' : 'Profil Pengguna',
+                        tabBarIcon: ({ color }) => <MaterialIcons name={(isMaster || isSuper) ? "settings" : "person"} size={28} color={color} />,
                     }}
                 />
                 <Tabs.Screen

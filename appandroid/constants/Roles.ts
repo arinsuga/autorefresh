@@ -1,6 +1,6 @@
 export const roleMaster = 'masterrole';
-export const roleSuper = 'superrole';
-export const roleAdmin = 'adminrole';
+export const roleSuper = 'arf-super';
+export const roleAdmin = 'arf-admin';
 export const roleUser = 'userrole';
 
 const Roles = {

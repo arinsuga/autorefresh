@@ -18,6 +18,7 @@ import { useCallback } from 'react';
 import { Colors } from '@/constants/Colors';
 import { useAuth } from '@/contexts/Authcontext';
 import { useTheme } from '@/contexts/ThemeContext';
+import Roles from '@/constants/Roles';
 import VehicleTypeService from '@/services/VehicleTypeService';
 import ServiceTypeService from '@/services/ServiceTypeService';
 import PaymentMethodService from '@/services/PaymentMethodService';
@@ -63,6 +64,9 @@ export default function TransactionScreen() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [ocrStatus, setOcrStatus] = useState<'idle' | 'processing' | 'success' | 'failed'>('idle');
     const [ocrMessage, setOcrMessage] = useState('');
+
+    const roles = authState?.user?.roles || [];
+    const isAdmin = roles.some(r => r.code === Roles.admin);
 
     const { autoOpenScanner } = useLocalSearchParams();
     
@@ -291,7 +295,11 @@ export default function TransactionScreen() {
                 type: "success",
             });
             
-            router.back();
+            if (isAdmin) {
+                router.replace('/(autorefresh)/history');
+            } else {
+                router.back();
+            }
         } catch (error: any) {
             console.error('Gagal menyimpan transaksi', error);
             
@@ -306,6 +314,19 @@ export default function TransactionScreen() {
             Alert.alert('Error', errorMsg);
         } finally {
             setIsSubmitting(false);
+        }
+    };
+
+    const handleOpenScanner = async () => {
+        const status = await Camera.requestCameraPermission();
+        if (status === 'granted') {
+            setIsOCRVisible(true);
+        } else {
+            Alert.alert(
+                'Permission Denied',
+                'Aplikasi membutuhkan izin kamera untuk memindai plat nomor.',
+                [{ text: 'OK' }]
+            );
         }
     };
 
@@ -352,7 +373,7 @@ export default function TransactionScreen() {
                         </View>
                         <TouchableOpacity 
                             style={styles.ocrButton}
-                            onPress={() => setIsOCRVisible(true)}
+                            onPress={handleOpenScanner}
                         >
                             <MaterialIcons name="camera-alt" size={24} color={Colors.white} />
                         </TouchableOpacity>

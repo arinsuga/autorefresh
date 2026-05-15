@@ -22,8 +22,8 @@ class RolesTableSeeder extends Seeder
         DB::table("roles")->insert([ "id" => 4, "app_id" => 1, "code" => "userrole", "name" => "User Role", "description" => "User Access" ]); 
 
         // Autorefresh Roles
-        DB::table("roles")->insert([ "id" => 5, "app_id" => 2, "code" => "arf-super", "name" => "Autorefresh Super Admin", "description" => "Hak Akses: Full Control" ]); 
-        DB::table("roles")->insert([ "id" => 6, "app_id" => 2, "code" => "arf-admin", "name" => "Autorefresh Admin", "description" => "Hak Akses: Reporting, User Access" ]); 
+        DB::table("roles")->insert([ "id" => 5, "app_id" => 2, "code" => "arf-super", "name" => "Owner BSCSteam", "description" => "Hak Akses: Owner" ]); 
+        DB::table("roles")->insert([ "id" => 6, "app_id" => 2, "code" => "arf-admin", "name" => "Kasir BSCSteam", "description" => "Hak Akses: Kasir" ]); 
 
     }
 }

@@ -17,6 +17,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 //Constants
 import { Colors } from '@/constants/Colors';
 import Styles from '@/constants/Styles';
+import Roles from '@/constants/Roles';
 
 //Components
 import DateInfo from "@/components/DateInfo/DateInfo";
@@ -60,6 +61,7 @@ export default function ReportScreen() {
     const [results, setResults] = useState<any[]>([]);
 
     const handleSelectedDate = useCallback(async (date: moment.Moment) => {
+        if (!authState?.authenticated) return;
         setIsWaiting(true);
         setReportType('Detail');
         setIsViewMode(false);
@@ -72,14 +74,17 @@ export default function ReportScreen() {
             const data = await TransactionService.getReportDetail(params);
             setResults(data);
             setSelectedDate(date);
-        } catch (error) {
-            console.error('Failed to fetch report', error);
+        } catch (error: any) {
+            if (error.response?.status !== 401) {
+                console.error('Failed to fetch report', error);
+            }
         } finally {
             setIsWaiting(false);
         }
-    }, [authState?.selectedBranch]);
+    }, [authState]);
 
     const handleRefresh = useCallback(async (viewMode: boolean, parDate: moment.Moment, parDateFrom?: string, parDateTo?: string) => {
+        if (!authState?.authenticated) return;
         if (viewMode) {
             // Re-run the last filter logic if possible or just refresh period
             handleView( { 
@@ -93,9 +98,10 @@ export default function ReportScreen() {
         } else {
             handleSelectedDate(parDate);
         }
-    }, [handleSelectedDate, authState?.selectedBranch, reportType]);
+    }, [handleSelectedDate, authState, reportType]);
 
     const handleView = async (filters: any) => {
+        if (!authState?.authenticated) return;
         setIsViewMode(true);
         setShowFilter(false);
         setIsWaiting(true);
@@ -117,8 +123,10 @@ export default function ReportScreen() {
                 : await TransactionService.getReportDetail(params);
                 
             setResults(data);
-        } catch (error) {
-            console.error('Error fetching filtered report', error);
+        } catch (error: any) {
+            if (error.response?.status !== 401) {
+                console.error('Error fetching filtered report', error);
+            }
         } finally {
             setIsWaiting(false);
         }
@@ -210,7 +218,9 @@ export default function ReportScreen() {
     };
 
     useEffect(() => {
-        handleSelectedDate(selectedDate);
+        if (authState?.authenticated) {
+            handleSelectedDate(selectedDate);
+        }
     }, []);
 
     return (

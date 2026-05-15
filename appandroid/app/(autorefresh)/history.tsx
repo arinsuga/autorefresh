@@ -8,8 +8,11 @@ import TransactionCard from '@/components/TransactionCard';
 import ReceiptView from '@/components/ReceiptView';
 import { Colors } from '@/constants/Colors';
 import { MaterialIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { Stack, useRouter, useFocusEffect } from 'expo-router';
+import { useCallback } from 'react';
 import moment from 'moment';
+
+import { Camera } from 'react-native-vision-camera';
 
 export default function TransactionHistoryScreen() {
     const { authState } = useAuth();
@@ -24,6 +27,7 @@ export default function TransactionHistoryScreen() {
     const pageSize = 15;
 
     const fetchTransactions = async (pageNum: number = 1, shouldAppend: boolean = false) => {
+        if (!authState?.authenticated) return;
         try {
             const params = {
                 page: pageNum,
@@ -45,14 +49,20 @@ export default function TransactionHistoryScreen() {
             
             setPage(response.current_page);
             setLastPage(response.last_page);
-        } catch (error) {
-            console.error('Failed to fetch transactions', error);
+        } catch (error: any) {
+            if (error.response?.status !== 401) {
+                console.error('Failed to fetch transactions', error);
+            }
         }
     };
 
-    useEffect(() => {
-        fetchTransactions();
-    }, [authState]);
+    useFocusEffect(
+        useCallback(() => {
+            if (authState?.authenticated) {
+                fetchTransactions();
+            }
+        }, [authState])
+    );
 
     const loadMore = () => {
         if (page < lastPage && !refreshing) {
@@ -71,11 +81,16 @@ export default function TransactionHistoryScreen() {
         setModalVisible(true);
     };
 
-    const handleNewTransaction = () => {
-        router.push({
-            pathname: '/(autorefresh)/transaction',
-            params: { autoOpenScanner: 'true' }
-        });
+    const handleNewTransaction = async () => {
+        const status = await Camera.requestCameraPermission();
+        if (status === 'granted') {
+            router.push({
+                pathname: '/(autorefresh)/transaction',
+                params: { autoOpenScanner: 'true' }
+            });
+        } else {
+            router.push('/(autorefresh)/transaction');
+        }
     };
 
     return (

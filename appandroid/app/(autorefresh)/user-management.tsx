@@ -6,6 +6,7 @@ import { Colors } from '@/constants/Colors';
 import { MaterialIcons } from '@expo/vector-icons';
 import UserService from '@/services/UserService';
 import Roles from '@/constants/Roles';
+import Apps from '@/constants/Apps';
 import { useMenu } from '@/contexts/MenuContext';
 
 export default function UserManagementScreen() {
@@ -24,10 +25,17 @@ export default function UserManagementScreen() {
         selectedRoles: [] as number[],
         disabled: false,
     });
+    const [resetModalVisible, setResetModalVisible] = useState(false);
+    const [resettingUser, setResettingUser] = useState<any>(null);
+    const [newPassword, setNewPassword] = useState('');
+    const [isSaving, setIsSaving] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const [showResetPassword, setShowResetPassword] = useState(false);
 
     const userRoles = authState?.user?.roles || [];
     const isMaster = userRoles.some(r => r.code === Roles.master);
     const isSuper = userRoles.some(r => r.code === Roles.super);
+    const isAdmin = userRoles.some(r => r.code === Roles.admin);
 
     useEffect(() => {
         fetchUsers();
@@ -50,8 +58,11 @@ export default function UserManagementScreen() {
 
     const fetchRoles = async () => {
         try {
-            const data = await UserService.getRoles();
-            setRoles(data);
+            const data = await UserService.getRoles(Apps.autorefresh);
+            console.log('fetchRoles data:', data);
+            // Filter in frontend as well to be 100% sure only App ID 2 roles are shown
+            const filteredData = data.filter((r: any) => parseInt(r.app_id) === Apps.autorefresh);
+            setRoles(filteredData);
         } catch (error) {
             console.error('Failed to fetch roles', error);
         }
@@ -65,6 +76,7 @@ export default function UserManagementScreen() {
                     email: formData.email,
                     roles: formData.selectedRoles,
                     disabled: formData.disabled,
+                    app_id: Apps.autorefresh,
                 });
                 Alert.alert('Success', 'User updated successfully');
             } else {
@@ -74,6 +86,7 @@ export default function UserManagementScreen() {
                     password: formData.password,
                     roles: formData.selectedRoles,
                     disabled: formData.disabled,
+                    app_id: Apps.autorefresh,
                 });
                 Alert.alert('Success', 'User created successfully');
             }
@@ -106,29 +119,29 @@ export default function UserManagementScreen() {
         );
     };
 
-    const handleResetPassword = (id: number) => {
-        let newPass = '';
-        Alert.prompt(
-            'Reset Password',
-            'Enter new password for this user:',
-            [
-                { text: 'Cancel', style: 'cancel' },
-                { 
-                    text: 'Reset', 
-                    onPress: async (password) => {
-                        if (password) {
-                            try {
-                                await UserService.resetPassword(id, { password });
-                                Alert.alert('Success', 'Password reset successfully');
-                            } catch (error) {
-                                Alert.alert('Error', 'Failed to reset password');
-                            }
-                        }
-                    } 
-                }
-            ],
-            'plain-text'
-        );
+    const handleResetPassword = (user: any) => {
+        setResettingUser(user);
+        setNewPassword('');
+        setResetModalVisible(true);
+    };
+
+    const confirmResetPassword = async () => {
+        if (!newPassword || newPassword.length < 6) {
+            Alert.alert('Error', 'Password must be at least 6 characters');
+            return;
+        }
+
+        setIsSaving(true);
+        try {
+            await UserService.resetPassword(resettingUser.id, { password: newPassword });
+            Alert.alert('Success', 'Password reset successfully');
+            setResetModalVisible(false);
+        } catch (error: any) {
+            Alert.alert('Error', error.response?.data?.message || 'Failed to reset password');
+        } finally {
+            setIsSaving(true);
+            setIsSaving(false);
+        }
     };
 
     const handleToggleStatus = async (id: number) => {
@@ -182,8 +195,8 @@ export default function UserManagementScreen() {
                 </View>
             </View>
             <View style={styles.actions}>
-                {(isMaster || isSuper) && (
-                    <TouchableOpacity onPress={() => handleResetPassword(item.id)} style={styles.actionBtn}>
+                {(isMaster || isSuper || isAdmin) && (
+                    <TouchableOpacity onPress={() => handleResetPassword(item)} style={styles.actionBtn}>
                         <MaterialIcons name="vpn-key" size={20} color={Colors.bgOrange} />
                     </TouchableOpacity>
                 )}
@@ -265,14 +278,26 @@ export default function UserManagementScreen() {
                             {!editingUser && (
                                 <>
                                     <Text style={[styles.label, { color: theme.text }]}>Password</Text>
-                                    <TextInput
-                                        style={[styles.input, { color: theme.text, borderColor: theme.border }]}
-                                        value={formData.password}
-                                        onChangeText={(text) => setFormData({...formData, password: text})}
-                                        placeholder="Enter password"
-                                        secureTextEntry
-                                        placeholderTextColor={Colors.grey}
-                                    />
+                                    <View style={styles.passwordContainer}>
+                                        <TextInput
+                                            style={[styles.input, styles.passwordInput, { color: theme.text, borderColor: theme.border }]}
+                                            value={formData.password}
+                                            onChangeText={(text) => setFormData({...formData, password: text})}
+                                            placeholder="Enter password"
+                                            secureTextEntry={!showPassword}
+                                            placeholderTextColor={Colors.grey}
+                                        />
+                                        <TouchableOpacity 
+                                            style={styles.eyeIcon} 
+                                            onPress={() => setShowPassword(!showPassword)}
+                                        >
+                                            <MaterialIcons 
+                                                name={showPassword ? "visibility" : "visibility-off"} 
+                                                size={24} 
+                                                color={Colors.grey} 
+                                            />
+                                        </TouchableOpacity>
+                                    </View>
                                 </>
                             )}
 
@@ -328,6 +353,56 @@ export default function UserManagementScreen() {
                             </TouchableOpacity>
                             <TouchableOpacity style={styles.saveBtn} onPress={handleSaveUser}>
                                 <Text style={styles.saveBtnText}>Save</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
+
+            <Modal visible={resetModalVisible} animationType="slide" transparent={true}>
+                <View style={styles.modalOverlay}>
+                    <View style={[styles.modalContent, { backgroundColor: theme.surface }]}>
+                        <Text style={[styles.modalTitle, { color: theme.text }]}>Reset Password</Text>
+                        <Text style={[styles.label, { color: theme.text, textAlign: 'center', marginTop: 0 }]}>
+                            Reset password for: {resettingUser?.name}
+                        </Text>
+                        
+                        <View style={styles.modalForm}>
+                            <Text style={[styles.label, { color: theme.text }]}>New Password</Text>
+                            <View style={styles.passwordContainer}>
+                                <TextInput
+                                    style={[styles.input, styles.passwordInput, { color: theme.text, borderColor: theme.border }]}
+                                    value={newPassword}
+                                    onChangeText={setNewPassword}
+                                    placeholder="Enter new password (min. 6 chars)"
+                                    secureTextEntry={!showResetPassword}
+                                    placeholderTextColor={Colors.grey}
+                                />
+                                <TouchableOpacity 
+                                    style={styles.eyeIcon} 
+                                    onPress={() => setShowResetPassword(!showResetPassword)}
+                                >
+                                    <MaterialIcons 
+                                        name={showResetPassword ? "visibility" : "visibility-off"} 
+                                        size={24} 
+                                        color={Colors.grey} 
+                                    />
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+
+                        <View style={styles.modalActions}>
+                            <TouchableOpacity style={styles.cancelBtn} onPress={() => setResetModalVisible(false)}>
+                                <Text style={styles.cancelBtnText}>Cancel</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity 
+                                style={[styles.saveBtn, isSaving && { opacity: 0.7 }]} 
+                                onPress={confirmResetPassword}
+                                disabled={isSaving}
+                            >
+                                <Text style={styles.saveBtnText}>
+                                    {isSaving ? 'Resetting...' : 'Reset Password'}
+                                </Text>
                             </TouchableOpacity>
                         </View>
                     </View>
@@ -455,6 +530,17 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         padding: 12,
         fontSize: 16,
+    },
+    passwordContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    passwordInput: {
+        flex: 1,
+    },
+    eyeIcon: {
+        position: 'absolute',
+        right: 15,
     },
     rolesGrid: {
         flexDirection: 'row',
