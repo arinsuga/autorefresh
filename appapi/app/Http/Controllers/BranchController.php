@@ -34,7 +34,7 @@ class BranchController extends Controller
 
     public function store(Request $request)
     {
-        if (!$this->isSuper()) {
+        if (!$this->isMaster()) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
@@ -49,7 +49,7 @@ class BranchController extends Controller
 
     public function update(Request $request, $id)
     {
-        if (!$this->isSuper()) {
+        if (!$this->isMaster() && !$this->isSuper()) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
@@ -70,7 +70,7 @@ class BranchController extends Controller
 
     public function destroy($id)
     {
-        if (!$this->isSuper()) {
+        if (!$this->isMaster()) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 

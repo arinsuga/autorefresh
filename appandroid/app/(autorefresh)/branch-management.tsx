@@ -113,9 +113,11 @@ export default function BranchManagementScreen() {
                 ) : null}
             </View>
             <View style={styles.actions}>
-                <TouchableOpacity onPress={() => openModal(item)} style={styles.actionBtn}>
-                    <MaterialIcons name="edit" size={24} color={Colors.blue} />
-                </TouchableOpacity>
+                {(isMaster || isSuper) && (
+                    <TouchableOpacity onPress={() => openModal(item)} style={styles.actionBtn}>
+                        <MaterialIcons name="edit" size={24} color={Colors.blue} />
+                    </TouchableOpacity>
+                )}
                 {isMaster && (
                     <TouchableOpacity onPress={() => handleDeleteBranch(item.id)} style={styles.actionBtn}>
                         <MaterialIcons name="delete" size={24} color={Colors.red} />

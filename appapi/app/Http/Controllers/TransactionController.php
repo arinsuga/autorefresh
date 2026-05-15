@@ -18,7 +18,15 @@ class TransactionController extends Controller
 
     public function index(Request $request)
     {
-        $transactions = $this->repository->getAllPaginated($request->all());
+        $params = $request->all();
+        $user = JWTAuth::parseToken()->authenticate();
+        
+        // ADMIN can only view current date
+        if ($this->isAdmin() && !$this->isMaster() && !$this->isSuper()) {
+            $params['date'] = now()->format('Y-m-d');
+        }
+
+        $transactions = $this->repository->getAllPaginated($params);
         return response()->json($transactions, 200);
     }
 
@@ -35,6 +43,9 @@ class TransactionController extends Controller
 
     public function store(Request $request)
     {
+        if (!$this->isMaster() && !$this->isSuper() && !$this->isAdmin()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
         $request->validate([
             'branch_id'         => 'required|exists:branches,id',
             'transaction_dt'    => 'required|date',
@@ -60,7 +71,7 @@ class TransactionController extends Controller
 
     public function update(Request $request, $id)
     {
-        if (!$this->isSuper()) {
+        if (!$this->isMaster() && !$this->isSuper()) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
@@ -87,7 +98,7 @@ class TransactionController extends Controller
 
     public function destroy($id)
     {
-        if (!$this->isSuper()) {
+        if (!$this->isMaster() && !$this->isSuper()) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
@@ -109,12 +120,20 @@ class TransactionController extends Controller
 
     public function getReportDetail(Request $request)
     {
+        if (!$this->isMaster() && !$this->isSuper()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $data = $this->repository->getReportDetail($request->all());
         return response()->json(['data' => $data], 200);
     }
 
     public function getReportSummary(Request $request)
     {
+        if (!$this->isMaster() && !$this->isSuper()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $data = $this->repository->getReportSummary($request->all());
         return response()->json(['data' => $data], 200);
     }

@@ -41,6 +41,11 @@ export default function ReportScreen() {
 
     const [currentDate, setCurrentDate] = useState(moment());
     const [selectedDate, setSelectedDate] = useState(currentDate.clone());
+    
+    const userRoles = authState?.user?.roles || [];
+    const isMaster = userRoles.some(r => r.code === Roles.master);
+    const isSuper = userRoles.some(r => r.code === Roles.super);
+    const canManageTransactions = isMaster || isSuper;
     const [selectedDatePeriod, setSelectedDatePeriod] = useState<{ dateFrom: string, dateTo: string }>({ dateFrom: '', dateTo: '' });
     
     const [isWaiting, setIsWaiting] = useState(false);
@@ -217,13 +222,15 @@ export default function ReportScreen() {
                     <>
                         <DateInfo date={selectedDate} currentDate={currentDate} />
                         <View style={styles.actionButtonGroup}>
-                            <TouchableOpacity 
-                                style={[Styles.btn, styles.actionBtn, { backgroundColor: Colors.primary }]} 
-                                onPress={() => setShowFilter(true)}
-                            >
-                                <Icon.Share size={18} color={Colors.white} />
-                                <Text style={styles.actionBtnText}>Bagikan</Text>
-                            </TouchableOpacity>
+                            {canManageTransactions && (
+                                <TouchableOpacity 
+                                    style={[Styles.btn, styles.actionBtn, { backgroundColor: Colors.primary }]} 
+                                    onPress={() => setShowFilter(true)}
+                                >
+                                    <Icon.Share size={18} color={Colors.white} />
+                                    <Text style={styles.actionBtnText}>Bagikan</Text>
+                                </TouchableOpacity>
+                            )}
                         </View>
                     </>
                 ) : (
@@ -262,8 +269,8 @@ export default function ReportScreen() {
                     reportType={reportType}
                     onRefresh={handleRefresh}
                     onItemPress={(item) => !isViewMode && Alert.alert('Rincian', `Transaksi: ${item.transaction_number}`)}
-                    onEdit={handleEdit}
-                    onDelete={handleDelete}
+                    onEdit={canManageTransactions ? handleEdit : undefined}
+                    onDelete={canManageTransactions ? handleDelete : undefined}
                 />
             </View>
 

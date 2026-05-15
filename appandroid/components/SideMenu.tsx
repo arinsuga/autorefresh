@@ -46,30 +46,30 @@ export default function SideMenu() {
                     <MaterialIcons name="account-circle" size={60} color={Colors.white} />
                     <Text style={styles.drawerUser}>{authState?.user?.fullname}</Text>
                     <Text style={styles.drawerRole}>
-                        {isMaster ? 'Master Admin' : isSuper ? 'Super Admin' : 'Admin'}
+                        {isMaster ? 'Master Admin' : isSuper ? 'Super Admin' : roles.some(r => r.code === Roles.admin) ? 'Admin' : 'User'}
                     </Text>
                 </View>
 
                 <View style={styles.drawerContent}>
-                    {/* Branch Menu */}
+                    {/* Branch Menu - MASTER can manage, SUPER can edit */}
                     {(isMaster || isSuper) && (
                         <TouchableOpacity 
                             style={styles.drawerItem} 
                             onPress={() => navigateTo('/(autorefresh)/branch-management')}
                         >
                             <MaterialIcons name="storefront" size={24} color={Colors.bgOrange} />
-                            <Text style={[styles.drawerItemText, { color: theme.text }]}>Branch</Text>
+                            <Text style={[styles.drawerItemText, { color: theme.text }]}>Branch Management</Text>
                         </TouchableOpacity>
                     )}
 
-                    {/* User Profile Menu */}
+                    {/* User Management Menu - MASTER can manage, SUPER can reset pass */}
                     {(isMaster || isSuper) && (
                         <TouchableOpacity 
                             style={styles.drawerItem} 
                             onPress={() => navigateTo('/(autorefresh)/user-management')}
                         >
                             <MaterialIcons name="people" size={24} color={Colors.bgOrange} />
-                            <Text style={[styles.drawerItemText, { color: theme.text }]}>User Profile</Text>
+                            <Text style={[styles.drawerItemText, { color: theme.text }]}>User Management</Text>
                         </TouchableOpacity>
                     )}
 

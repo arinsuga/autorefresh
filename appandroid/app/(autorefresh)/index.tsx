@@ -20,8 +20,10 @@ export default function AutoRefreshDashboard() {
     
     // Roles check
     const roles = authState?.user?.roles || [];
+    const isMaster = roles.some(r => r.code === Roles.master);
+    const isSuper = roles.some(r => r.code === Roles.super);
     const isAdmin = roles.some(r => r.code === Roles.admin);
-    const isSuper = roles.some(r => r.code === Roles.super || r.code === Roles.master);
+    const canSeeDashboard = isMaster || isSuper;
 
     const [stats, setStats] = useState({
         todayCount: 0,
@@ -79,20 +81,20 @@ export default function AutoRefreshDashboard() {
     };
 
     useEffect(() => {
-        if (isAdmin && !isSuper) {
+        if (!canSeeDashboard) {
             router.replace('/(autorefresh)/history');
         }
-    }, [isAdmin, isSuper]);
+    }, [canSeeDashboard]);
 
     useEffect(() => {
-        if (isSuper) {
+        if (canSeeDashboard) {
             fetchData();
         }
     }, [authState]);
 
     const onRefresh = async () => {
         setRefreshing(true);
-        if (isSuper) await fetchData();
+        if (canSeeDashboard) await fetchData();
         setRefreshing(false);
     };
 
@@ -138,7 +140,7 @@ export default function AutoRefreshDashboard() {
                     </View>
                 </View>
 
-                {isSuper && (
+                {canSeeDashboard && (
                     <View style={styles.statsContainer}>
                         <View style={styles.row}>
                             <View style={styles.col}>

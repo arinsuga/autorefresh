@@ -36,13 +36,19 @@ class UserController extends Controller
 
     private function isSuper()
     {
-        return $this->checkRole([Roles::master(), Roles::super()]);
+        return $this->checkRole(Roles::super());
+    }
+
+    private function isAdmin()
+    {
+        return $this->checkRole(Roles::admin());
     }
 
     public function index()
     {
         $currentUser = JWTAuth::user();
-        if (!$this->isSuper()) {
+        // MASTER and SUPER can see user list
+        if (!$this->isMaster() && !$this->isSuper()) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -75,7 +81,7 @@ class UserController extends Controller
 
     public function show($id)
     {
-        if (!$this->isSuper()) {
+        if (!$this->isMaster() && !$this->isSuper()) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -89,7 +95,7 @@ class UserController extends Controller
 
     public function store(Request $request)
     {
-        if (!$this->isSuper()) {
+        if (!$this->isMaster()) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -131,7 +137,7 @@ class UserController extends Controller
 
     public function update(Request $request, $id)
     {
-        if (!$this->isSuper()) {
+        if (!$this->isMaster()) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -161,8 +167,8 @@ class UserController extends Controller
             $isTargetMst = in_array(Roles::master(), $currentRoles);
             $isNewMst = in_array(Roles::master(), $newRoles);
 
-            if (($isTargetMst || $isNewMst) && !in_array(Roles::master(), JWTAuth::user()->roles->pluck('code')->toArray())) {
-                return response()->json(['message' => 'Cannot change mstrole assignments'], 403);
+            if (($isTargetMst || $isNewMst) && !$this->isMaster()) {
+                return response()->json(['message' => 'Only Master can change masterrole assignments'], 403);
             }
 
             $user->roles()->sync($newRoleIds);
@@ -203,13 +209,21 @@ class UserController extends Controller
 
     public function resetPassword(Request $request, $id)
     {
-        if (!$this->isSuper()) {
+        if (!$this->isMaster() && !$this->isSuper()) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
         $user = User::find($id);
         if (!$user) {
             return response()->json(['message' => 'User not found'], 404);
+        }
+
+        // SUPER cannot reset MASTER password
+        if ($this->isSuper() && !$this->isMaster()) {
+            $targetRoles = $user->roles->pluck('code')->toArray();
+            if (in_array(Roles::master(), $targetRoles)) {
+                return response()->json(['message' => 'Super cannot reset Master password'], 403);
+            }
         }
 
         $validator = Validator::make($request->all(), [
@@ -228,7 +242,7 @@ class UserController extends Controller
 
     public function toggleStatus(Request $request, $id)
     {
-        if (!$this->isSuper()) {
+        if (!$this->isMaster()) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -249,7 +263,7 @@ class UserController extends Controller
 
     public function getRoles()
     {
-        if (!$this->isSuper()) {
+        if (!$this->isMaster() && !$this->isSuper()) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 

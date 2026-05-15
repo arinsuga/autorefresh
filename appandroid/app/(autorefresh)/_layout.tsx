@@ -15,8 +15,14 @@ export default function AutoRefreshLayout() {
     const { Logout, authState } = useAuth();
     const router = useRouter();
     const roles = authState?.user?.roles || [];
+    const isMaster = roles.some(r => r.code === Roles.master);
+    const isSuper = roles.some(r => r.code === Roles.super);
     const isAdmin = roles.some(r => r.code === Roles.admin);
-    const isSuper = roles.some(r => r.code === Roles.super || r.code === Roles.master);
+    
+    // Combined permissions
+    const canAccessDashboard = isMaster || isSuper;
+    const canAccessReports = isMaster || isSuper;
+    const canAccessHistory = isAdmin;
 
     const handleLogout = () => {
         Alert.alert(
@@ -69,7 +75,7 @@ export default function AutoRefreshLayout() {
                     name="index"
                     options={{
                         title: 'Beranda',
-                        href: isSuper ? undefined : null,
+                        href: canAccessDashboard ? undefined : null,
                         tabBarIcon: ({ color }) => <MaterialIcons name="home" size={28} color={color} />,
                     }}
                 />
@@ -77,7 +83,7 @@ export default function AutoRefreshLayout() {
                     name="history"
                     options={{
                         title: 'Transaksi',
-                        href: isAdmin && !isSuper ? undefined : null,
+                        href: canAccessHistory ? undefined : null,
                         tabBarIcon: ({ color }) => <MaterialIcons name="history" size={28} color={color} />,
                     }}
                 />
@@ -85,7 +91,7 @@ export default function AutoRefreshLayout() {
                     name="report"
                     options={{
                         title: 'Transaksi',
-                        href: isSuper ? undefined : null,
+                        href: canAccessReports ? undefined : null,
                         tabBarIcon: ({ color }) => <MaterialIcons name="history" size={28} color={color} />,
                     }}
                 />

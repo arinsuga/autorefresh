@@ -33,6 +33,11 @@ class Controller extends BaseController
 
     protected function isSuper()
     {
-        return $this->checkRole([Roles::master(), Roles::super()]);
+        return $this->checkRole(Roles::super());
+    }
+
+    protected function isAdmin()
+    {
+        return $this->checkRole(Roles::admin());
     }
 }

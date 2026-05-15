@@ -182,23 +182,27 @@ export default function UserManagementScreen() {
                 </View>
             </View>
             <View style={styles.actions}>
-                <TouchableOpacity onPress={() => handleResetPassword(item.id)} style={styles.actionBtn}>
-                    <MaterialIcons name="vpn-key" size={20} color={Colors.bgOrange} />
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => openModal(item)} style={styles.actionBtn}>
-                    <MaterialIcons name="edit" size={20} color={Colors.blue} />
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => handleToggleStatus(item.id)} style={styles.actionBtn}>
-                    <MaterialIcons 
-                        name={item.disabled ? "play-arrow" : "pause"} 
-                        size={20} 
-                        color={item.disabled ? Colors.green : Colors.red} 
-                    />
-                </TouchableOpacity>
-                {isMaster && (
-                    <TouchableOpacity onPress={() => handleDeleteUser(item.id)} style={styles.actionBtn}>
-                        <MaterialIcons name="delete" size={20} color={Colors.red} />
+                {(isMaster || isSuper) && (
+                    <TouchableOpacity onPress={() => handleResetPassword(item.id)} style={styles.actionBtn}>
+                        <MaterialIcons name="vpn-key" size={20} color={Colors.bgOrange} />
                     </TouchableOpacity>
+                )}
+                {isMaster && (
+                    <>
+                        <TouchableOpacity onPress={() => openModal(item)} style={styles.actionBtn}>
+                            <MaterialIcons name="edit" size={20} color={Colors.blue} />
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => handleToggleStatus(item.id)} style={styles.actionBtn}>
+                            <MaterialIcons 
+                                name={item.disabled ? "play-arrow" : "pause"} 
+                                size={20} 
+                                color={item.disabled ? Colors.green : Colors.red} 
+                            />
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => handleDeleteUser(item.id)} style={styles.actionBtn}>
+                            <MaterialIcons name="delete" size={20} color={Colors.red} />
+                        </TouchableOpacity>
+                    </>
                 )}
             </View>
         </View>
@@ -213,7 +217,7 @@ export default function UserManagementScreen() {
                     </TouchableOpacity>
                     <Text style={[styles.title, { color: theme.text }]}>Users</Text>
                 </View>
-                {(isMaster || isSuper) && (
+                {isMaster && (
                     <TouchableOpacity style={styles.addBtn} onPress={() => openModal()}>
                         <MaterialIcons name="add" size={24} color={Colors.white} />
                         <Text style={styles.addBtnText}>Add User</Text>
