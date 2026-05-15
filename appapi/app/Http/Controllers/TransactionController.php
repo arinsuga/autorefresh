@@ -60,6 +60,10 @@ class TransactionController extends Controller
 
     public function update(Request $request, $id)
     {
+        if (!$this->isSuper()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $transaction = $this->repository->find($id);
 
         if (!$transaction) {
@@ -74,6 +78,7 @@ class TransactionController extends Controller
             'payment_method_id' => 'exists:payment_methods,id',
             'gross_total'       => 'numeric|min:0',
             'net_total'         => 'numeric|min:0',
+            'upload'            => 'nullable|image|max:10240',
         ]);
 
         $updated = $this->repository->update($id, $request->all());
@@ -82,6 +87,10 @@ class TransactionController extends Controller
 
     public function destroy($id)
     {
+        if (!$this->isSuper()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $transaction = $this->repository->find($id);
 
         if (!$transaction) {

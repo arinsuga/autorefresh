@@ -16,11 +16,14 @@ class RolesTableSeeder extends Seeder
         DB::table('roles')->delete();
         
         // Master Roles
-        DB::table("roles")->insert([ "id" => 1, "app_id" => 1, "code" => "mstrole", "name" => "Master Role", "description" => "Full Control For All Apps" ]); 
+        DB::table("roles")->insert([ "id" => 1, "app_id" => 1, "code" => "masterrole", "name" => "Master Role", "description" => "Full Control For All Apps" ]); 
+        DB::table("roles")->insert([ "id" => 2, "app_id" => 1, "code" => "superrole", "name" => "Super Role", "description" => "Super Admin Access Control" ]); 
+        DB::table("roles")->insert([ "id" => 3, "app_id" => 1, "code" => "adminrole", "name" => "Admin Role", "description" => "Admin Access Control" ]); 
+        DB::table("roles")->insert([ "id" => 4, "app_id" => 1, "code" => "userrole", "name" => "User Role", "description" => "User Access" ]); 
 
-        // Cost Control Roles
-        DB::table("roles")->insert([ "id" => 2, "app_id" => 2, "code" => "arf-super", "name" => "Autorefresh Super Admin", "description" => "Hak Akses: Full Control" ]); 
-        DB::table("roles")->insert([ "id" => 3, "app_id" => 2, "code" => "arf-admin", "name" => "Autorefresh Admin", "description" => "Hak Akses: Reporting, User Access" ]); 
+        // Autorefresh Roles
+        DB::table("roles")->insert([ "id" => 5, "app_id" => 2, "code" => "arf-super", "name" => "Autorefresh Super Admin", "description" => "Hak Akses: Full Control" ]); 
+        DB::table("roles")->insert([ "id" => 6, "app_id" => 2, "code" => "arf-admin", "name" => "Autorefresh Admin", "description" => "Hak Akses: Reporting, User Access" ]); 
 
     }
 }

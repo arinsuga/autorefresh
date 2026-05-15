@@ -39,9 +39,26 @@ const TransactionService = {
         }
     },
 
-    update: async (id: number, data: Partial<ITransaction>) => {
-        const response = await ApiService.put(`/transactions/${id}`, data);
-        return response.data.data as ITransaction;
+    update: async (id: number, data: FormData) => {
+        const token = await getToken();
+        try {
+            const response = await axios.post(`${API_URL}/transactions/${id}`, data, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/json',
+                    'Content-Type': 'multipart/form-data',
+                },
+                params: { _method: 'PUT' }
+            });
+            return response.data.data as ITransaction;
+        } catch (error: any) {
+            console.log('===== Transaction Update Error =====');
+            if (error.response) {
+                console.log('Status:', error.response.status);
+                console.log('Data:', JSON.stringify(error.response.data, null, 2));
+            }
+            throw error;
+        }
     },
 
     delete: async (id: number) => {

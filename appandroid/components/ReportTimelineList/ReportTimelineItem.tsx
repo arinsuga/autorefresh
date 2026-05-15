@@ -9,6 +9,10 @@ import {
 
 //Packages
 import FastImage from "react-native-fast-image";
+import { MaterialIcons } from "@expo/vector-icons";
+
+//Context
+import { useAuth } from "@/contexts/Authcontext";
 
 //Components
 import Icon from '@/components/Icon/Icon';
@@ -20,14 +24,13 @@ import Styles from '@/constants/Styles';
 //Interfaces
 import { ITransaction } from "@/interfaces/ITransaction";
 
-type ReportTimelineItemProps = {
-    item: ITransaction;
-    onPress?: () => void;
-}
-
-const ReportTimelineItem = memo(({ item, onPress }: ReportTimelineItemProps) => {
+const ReportTimelineItem = memo(({ item, onPress, onEdit, onDelete }: ReportTimelineItemProps) => {
+    const { authState } = useAuth();
     const [parentheight, setParentHeight] = useState(0);
     const [localShowPhoto, setLocalShowPhoto] = useState(false);
+
+    // Check if user is arf-super
+    const isSuper = authState?.user?.roles?.some(r => r.code === 'arf-super');
 
     // Visibility is now strictly local
     const isVisible = localShowPhoto;
@@ -42,115 +45,141 @@ const ReportTimelineItem = memo(({ item, onPress }: ReportTimelineItemProps) => 
     }
 
     return (
-        <TouchableOpacity 
-            style={[
-                styles.itemContainer,
-                {
-                    backgroundColor: Colors.white,
-                    borderTopColor: Colors.bgOrange,
-                }
-            ]} 
-            activeOpacity={0.8}
-            onPress={onPress}
-        >
-            <View onLayout={onLayout}>
-                <View style={styles.headerRow}>
-                    <View style={styles.titleGroup}>
-                        <Icon.History color={Colors.bgOrange} size={20} />
-                        <Text style={styles.itemTitle}>
-                            {item.transaction_number || 'Transaksi Baru'}
-                        </Text>
-                    </View>
-                    
-                    {item.transaction_photo && (
-                        <TouchableOpacity 
-                            style={[
-                                Styles.btn,
-                                styles.imageBtn
-                            ]} 
-                            onPress={handleShowImage}
-                        >
-                            <Text style={styles.imageBtnText}>
-                                {isVisible ? 'Tutup' : 'Foto'}
+        <View style={styles.cardContainer}>
+            <TouchableOpacity 
+                style={[
+                    styles.itemContainer,
+                    {
+                        backgroundColor: Colors.white,
+                        borderTopColor: Colors.bgOrange,
+                    }
+                ]} 
+                activeOpacity={0.8}
+                onPress={onPress}
+            >
+                <View onLayout={onLayout}>
+                    <View style={styles.headerRow}>
+                        <View style={styles.titleGroup}>
+                            <Icon.History color={Colors.bgOrange} size={20} />
+                            <Text style={styles.itemTitle}>
+                                {item.transaction_number || 'Transaksi Baru'}
                             </Text>
-                            {isVisible ? (
-                                <Icon.ArrowUp color={Colors.white} size={16} />
-                            ) : (
-                                <Icon.ArrowDown color={Colors.white} size={16} />
-                            )}
-                        </TouchableOpacity>
+                        </View>
+                        
+                        {item.transaction_photo && (
+                            <TouchableOpacity 
+                                style={[
+                                    Styles.btn,
+                                    styles.imageBtn
+                                ]} 
+                                onPress={handleShowImage}
+                            >
+                                <Text style={styles.imageBtnText}>
+                                    {isVisible ? 'Tutup' : 'Foto'}
+                                </Text>
+                                {isVisible ? (
+                                    <Icon.ArrowUp color={Colors.white} size={16} />
+                                ) : (
+                                    <Icon.ArrowDown color={Colors.white} size={16} />
+                                )}
+                            </TouchableOpacity>
+                        )}
+                    </View>
+
+                    {item.transaction_photo && isVisible && (
+                        <View style={styles.imageContainer}>
+                            <FastImage
+                                source={{ uri: item.transaction_photo, priority: FastImage.priority.normal }}
+                                resizeMode={FastImage.resizeMode.contain}
+                                style={{
+                                    width: '100%',
+                                    height: 200,
+                                    borderRadius: 5
+                                }}
+                            />
+                        </View>
                     )}
-                </View>
 
-                {item.transaction_photo && isVisible && (
-                    <View style={styles.imageContainer}>
-                        <FastImage
-                            source={{ uri: item.transaction_photo, priority: FastImage.priority.normal }}
-                            resizeMode={FastImage.resizeMode.contain}
-                            style={{
-                                width: '100%',
-                                height: 200,
-                                borderRadius: 5
-                            }}
-                        />
+                    <View style={styles.infoRow}>
+                        <Icon.User color={Colors.grey} size={18} />
+                        <View style={{ flex: 1 }}>
+                            <Text style={styles.infoText}>
+                                {item.plate_number} - {item.vehicle_type?.vehicle_type_name}
+                            </Text>
+                        </View>
                     </View>
-                )}
 
-                <View style={styles.infoRow}>
-                    <Icon.User color={Colors.grey} size={18} />
-                    <View style={{ flex: 1 }}>
-                        <Text style={styles.infoText}>
-                            {item.plate_number} - {item.vehicle_type?.vehicle_type_name}
+                    <View style={styles.infoRow}>
+                        <Icon.Dashboard color={Colors.grey} size={18} />
+                        <View style={{ flex: 1 }}>
+                            <Text style={styles.infoText}>
+                                {item.transaction_services?.map(s => s.service_type?.service_type_name).join(', ')}
+                            </Text>
+                        </View>
+                    </View>
+
+                    <View style={styles.infoRow}>
+                        <Icon.Time color={Colors.grey} size={18} />
+                        <View>
+                            <Text style={styles.infoText}>{item.transaction_dt}</Text>
+                        </View>
+                    </View>
+
+                    <View style={styles.footerRow}>
+                        <View style={styles.paymentBadge}>
+                            <Icon.Sync color={Colors.grey} size={14} />
+                            <Text style={styles.paymentText}>{item.payment_method?.payment_method_name}</Text>
+                        </View>
+                        <Text style={styles.totalValue}>
+                            Rp {(item.net_total ?? 0).toLocaleString('id-ID')}
                         </Text>
                     </View>
                 </View>
+            </TouchableOpacity>
 
-                <View style={styles.infoRow}>
-                    <Icon.Dashboard color={Colors.grey} size={18} />
-                    <View style={{ flex: 1 }}>
-                        <Text style={styles.infoText}>
-                            {item.transaction_services?.map(s => s.service_type?.service_type_name).join(', ')}
-                        </Text>
-                    </View>
+            {isSuper && (
+                <View style={styles.actionRow}>
+                    <TouchableOpacity 
+                        style={[styles.actionBtn, styles.editBtn]}
+                        onPress={() => onEdit && onEdit(item)}
+                    >
+                        <MaterialIcons name="edit" size={18} color={Colors.white} />
+                        <Text style={styles.actionBtnText}>EDIT</Text>
+                    </TouchableOpacity>
+                    
+                    <TouchableOpacity 
+                        style={[styles.actionBtn, styles.deleteBtn]}
+                        onPress={() => onDelete && onDelete(item)}
+                    >
+                        <MaterialIcons name="delete-outline" size={18} color={Colors.white} />
+                        <Text style={styles.actionBtnText}>HAPUS</Text>
+                    </TouchableOpacity>
                 </View>
-
-                <View style={styles.infoRow}>
-                    <Icon.Time color={Colors.grey} size={18} />
-                    <View>
-                        <Text style={styles.infoText}>{item.transaction_dt}</Text>
-                    </View>
-                </View>
-
-                <View style={styles.footerRow}>
-                    <View style={styles.paymentBadge}>
-                        <Icon.Sync color={Colors.grey} size={14} />
-                        <Text style={styles.paymentText}>{item.payment_method?.payment_method_name}</Text>
-                    </View>
-                    <Text style={styles.totalValue}>
-                        Rp {(item.net_total ?? 0).toLocaleString('id-ID')}
-                    </Text>
-                </View>
-            </View>
-        </TouchableOpacity>
+            )}
+        </View>
     )
 });
 
 export default ReportTimelineItem;
 
 const styles = StyleSheet.create({
+    cardContainer: {
+        marginBottom: 15,
+        borderRadius: 12,
+        overflow: 'hidden',
+        elevation: 3,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        backgroundColor: Colors.white,
+    },
     itemContainer: {
-        flex: 1,
         flexDirection: 'column',
         borderTopWidth: 7,
         paddingHorizontal: 18,
         paddingTop: 15,
         paddingBottom: 15,
-        marginBottom: 15,
-        elevation: 2,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
     },
     headerRow: {
         flexDirection: 'row',
@@ -225,5 +254,33 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: 'bold',
         color: Colors.bgOrange,
+    },
+    actionRow: {
+        flexDirection: 'row',
+        borderTopWidth: 1,
+        borderTopColor: Colors.whiteDark,
+        backgroundColor: '#F9F9F9',
+    },
+    actionBtn: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 12,
+        gap: 8,
+    },
+    editBtn: {
+        backgroundColor: '#4A90E2', // Elegant Blue
+        borderRightWidth: 1,
+        borderRightColor: Colors.white,
+    },
+    deleteBtn: {
+        backgroundColor: '#FF5A5F', // Premium Red
+    },
+    actionBtnText: {
+        color: Colors.white,
+        fontWeight: 'bold',
+        fontSize: 12,
+        letterSpacing: 1,
     },
 });

@@ -34,6 +34,10 @@ class PaymentMethodController extends Controller
 
     public function store(Request $request)
     {
+        if (!$this->isSuper()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $request->validate([
             'payment_method_code' => 'required|string|unique:payment_methods,payment_method_code',
             'payment_method_name' => 'required|string',
@@ -45,6 +49,10 @@ class PaymentMethodController extends Controller
 
     public function update(Request $request, $id)
     {
+        if (!$this->isSuper()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $paymentMethod = $this->repository->find($id);
 
         if (!$paymentMethod) {
@@ -62,6 +70,10 @@ class PaymentMethodController extends Controller
 
     public function destroy($id)
     {
+        if (!$this->isSuper()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $paymentMethod = $this->repository->find($id);
 
         if (!$paymentMethod) {

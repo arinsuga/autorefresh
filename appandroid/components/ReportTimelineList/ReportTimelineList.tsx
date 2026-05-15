@@ -28,6 +28,8 @@ interface IReportListProps {
     reportType: 'Summary' | 'Detail';
     onRefresh: (isViewMode: boolean, date: moment.Moment, dateFrom?: string, dateTo?: string) => Promise<void>;
     onItemPress?: (item: any) => void;
+    onEdit?: (item: any) => void;
+    onDelete?: (item: any) => void;
 }
 
 const ReportTimelineList = ({ 
@@ -38,7 +40,9 @@ const ReportTimelineList = ({
     isRefreshing = false, 
     reportType = 'Detail',
     onRefresh,
-    onItemPress
+    onItemPress,
+    onEdit,
+    onDelete
 }: IReportListProps) => {
 
     const handleFlatRefresh = () => {
@@ -78,6 +82,8 @@ const ReportTimelineList = ({
             <ReportTimelineItem 
                 item={item} 
                 onPress={() => onItemPress && onItemPress(item)} 
+                onEdit={onEdit}
+                onDelete={onDelete}
             />
         );
     };

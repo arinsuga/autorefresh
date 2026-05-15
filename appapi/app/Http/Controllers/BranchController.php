@@ -34,6 +34,10 @@ class BranchController extends Controller
 
     public function store(Request $request)
     {
+        if (!$this->isSuper()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $request->validate([
             'branch_code' => 'required|string|unique:branches,branch_code',
             'branch_name' => 'required|string|unique:branches,branch_name',
@@ -45,6 +49,10 @@ class BranchController extends Controller
 
     public function update(Request $request, $id)
     {
+        if (!$this->isSuper()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $branch = $this->repository->find($id);
 
         if (!$branch) {
@@ -62,6 +70,10 @@ class BranchController extends Controller
 
     public function destroy($id)
     {
+        if (!$this->isSuper()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $branch = $this->repository->find($id);
 
         if (!$branch) {

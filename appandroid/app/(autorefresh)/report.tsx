@@ -24,6 +24,7 @@ import DatePeriodInfo from "@/components/DatePeriodInfo/DatePeriodInfo";
 import DateList from "@/components/DateList/DateList";
 import ReportTimelineList from "@/components/ReportTimelineList/ReportTimelineList";
 import ReportFilterDialog from "@/components/ReportFilterDialog";
+import EditTransactionModal from "@/components/EditTransactionModal";
 import Icon from "@/components/Icon/Icon";
 
 //Interfaces
@@ -45,6 +46,10 @@ export default function ReportScreen() {
     const [isWaiting, setIsWaiting] = useState(false);
     const [isViewMode, setIsViewMode] = useState(false);
     const [showFilter, setShowFilter] = useState(false);
+    
+    // Edit state
+    const [editingTransaction, setEditingTransaction] = useState<ITransaction | null>(null);
+    const [showEditModal, setShowEditModal] = useState(false);
 
     const [reportType, setReportType] = useState<'Summary' | 'Detail'>('Detail');
     const [results, setResults] = useState<any[]>([]);
@@ -169,6 +174,36 @@ export default function ReportScreen() {
         }
     };
 
+    const handleEdit = (item: ITransaction) => {
+        setEditingTransaction(item);
+        setShowEditModal(true);
+    };
+
+    const handleDelete = (item: ITransaction) => {
+        Alert.alert(
+            'Konfirmasi Hapus',
+            `Apakah Anda yakin ingin menghapus transaksi ${item.transaction_number}?`,
+            [
+                { text: 'Batal', style: 'cancel' },
+                { 
+                    text: 'Hapus', 
+                    style: 'destructive',
+                    onPress: async () => {
+                        setIsWaiting(true);
+                        try {
+                            await TransactionService.delete(item.id!);
+                            handleRefresh(isViewMode, selectedDate, selectedDatePeriod.dateFrom, selectedDatePeriod.dateTo);
+                        } catch (error) {
+                            Alert.alert('Error', 'Gagal menghapus transaksi');
+                        } finally {
+                            setIsWaiting(false);
+                        }
+                    }
+                }
+            ]
+        );
+    };
+
     useEffect(() => {
         handleSelectedDate(selectedDate);
     }, []);
@@ -227,6 +262,8 @@ export default function ReportScreen() {
                     reportType={reportType}
                     onRefresh={handleRefresh}
                     onItemPress={(item) => !isViewMode && Alert.alert('Rincian', `Transaksi: ${item.transaction_number}`)}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
                 />
             </View>
 
@@ -238,6 +275,18 @@ export default function ReportScreen() {
                 onExportPDF={handleExportPDF}
                 onExportCSV={handleExportCSV}
                 onCancel={() => setShowFilter(false)}
+            />
+
+            <EditTransactionModal
+                visible={showEditModal}
+                transaction={editingTransaction}
+                onClose={() => {
+                    setShowEditModal(false);
+                    setEditingTransaction(null);
+                }}
+                onSave={() => {
+                    handleRefresh(isViewMode, selectedDate, selectedDatePeriod.dateFrom, selectedDatePeriod.dateTo);
+                }}
             />
         </SafeAreaView>
     );

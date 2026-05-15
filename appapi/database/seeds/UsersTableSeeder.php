@@ -29,53 +29,80 @@ class UsersTableSeeder extends Seeder
             "bo" => false,
             "disabled" => false,
         ]); 
+        // DB::table("users")->insert([
+        //     "id" => 2,
+        //     "name" => "Super Admin",
+        //     "email" => "sa@master.com",
+        //     "email_verified_at" => now(),
+        //     "dept" => null,
+        //     "noabsen" => null,
+        //     "password" => Hash::make('masterapp99'),
+        //     "remember_token" => Str::random(10),
+        //     "bo" => false,
+        //     "disabled" => false,
+        // ]); 
+        // DB::table("users")->insert([
+        //     "id" => 3,
+        //     "name" => "Admin",
+        //     "email" => "admin@master.com",
+        //     "email_verified_at" => now(),
+        //     "dept" => null,
+        //     "noabsen" => null,
+        //     "password" => Hash::make('masterapp99'),
+        //     "remember_token" => Str::random(10),
+        //     "bo" => false,
+        //     "disabled" => false,
+        // ]); 
+        // DB::table("users")->insert([
+        //     "id" => 4,
+        //     "name" => "John",
+        //     "email" => "john@master.com",
+        //     "email_verified_at" => now(),
+        //     "dept" => null,
+        //     "noabsen" => null,
+        //     "password" => Hash::make('masterapp99'),
+        //     "remember_token" => Str::random(10),
+        //     "bo" => false,
+        //     "disabled" => false,
+        // ]); 
+        // DB::table("users")->insert([
+        //     "id" => 5,
+        //     "name" => "Lisa",
+        //     "email" => "lisa@master.com",
+        //     "email_verified_at" => now(),
+        //     "dept" => null,
+        //     "noabsen" => null,
+        //     "password" => Hash::make('masterapp99'),
+        //     "remember_token" => Str::random(10),
+        //     "bo" => false,
+        //     "disabled" => false,
+        // ]); 
+
+        /** Additional Users */
         DB::table("users")->insert([
-            "id" => 2,
-            "name" => "Super Admin",
-            "email" => "sa@master.com",
+            "id" => 6,
+            "name" => "Owner",
+            "email" => "owner@master.com",
             "email_verified_at" => now(),
             "dept" => null,
             "noabsen" => null,
-            "password" => Hash::make('masterapp99'),
+            "password" => Hash::make('12345678'),
             "remember_token" => Str::random(10),
             "bo" => false,
             "disabled" => false,
         ]); 
         DB::table("users")->insert([
-            "id" => 3,
-            "name" => "Admin",
-            "email" => "admin@master.com",
+            "id" => 7,
+            "name" => "kasir",
+            "email" => "kasir@master.com",
             "email_verified_at" => now(),
             "dept" => null,
             "noabsen" => null,
-            "password" => Hash::make('masterapp99'),
+            "password" => Hash::make('12345678'),
             "remember_token" => Str::random(10),
             "bo" => false,
             "disabled" => false,
         ]); 
-        DB::table("users")->insert([
-            "id" => 4,
-            "name" => "John",
-            "email" => "john@master.com",
-            "email_verified_at" => now(),
-            "dept" => null,
-            "noabsen" => null,
-            "password" => Hash::make('masterapp99'),
-            "remember_token" => Str::random(10),
-            "bo" => false,
-            "disabled" => false,
-        ]); 
-        DB::table("users")->insert([
-            "id" => 5,
-            "name" => "Lisa",
-            "email" => "lisa@master.com",
-            "email_verified_at" => now(),
-            "dept" => null,
-            "noabsen" => null,
-            "password" => Hash::make('masterapp99'),
-            "remember_token" => Str::random(10),
-            "bo" => false,
-            "disabled" => false,
-        ]); 
+
     }
 }

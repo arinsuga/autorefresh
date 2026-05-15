@@ -21,3 +21,16 @@ Route::post('auth/refresh', 'AuthController@refresh')->name('auth.refresh');
 Route::delete('auth/blacklist', 'AuthController@blacklist')->name('auth.blacklist');
 Route::get('auth/me', 'AuthController@me')->name('auth.me');
 Route::get('auth/status', 'AuthController@status')->name('auth.status');
+
+// User Management
+Route::group(['middleware' => 'authjwt'], function () {
+    Route::get('users', 'UserController@index');
+    Route::post('users', 'UserController@store');
+    Route::get('users/{id}', 'UserController@show');
+    Route::put('users/{id}', 'UserController@update');
+    Route::delete('users/{id}', 'UserController@destroy');
+    Route::patch('users/{id}/reset-password', 'UserController@resetPassword');
+    Route::patch('users/{id}/toggle-status', 'UserController@toggleStatus');
+    Route::get('roles', 'UserController@getRoles');
+    Route::patch('profile/change-password', 'UserController@changePassword');
+});

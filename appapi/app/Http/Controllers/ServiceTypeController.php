@@ -34,6 +34,10 @@ class ServiceTypeController extends Controller
 
     public function store(Request $request)
     {
+        if (!$this->isSuper()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $request->validate([
             'vehicle_type_id' => 'required|exists:vehicle_types,id',
             'service_code'    => 'required|string|unique:service_types,service_code',
@@ -47,6 +51,10 @@ class ServiceTypeController extends Controller
 
     public function update(Request $request, $id)
     {
+        if (!$this->isSuper()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $serviceType = $this->repository->find($id);
 
         if (!$serviceType) {
@@ -66,6 +74,10 @@ class ServiceTypeController extends Controller
 
     public function destroy($id)
     {
+        if (!$this->isSuper()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $serviceType = $this->repository->find($id);
 
         if (!$serviceType) {

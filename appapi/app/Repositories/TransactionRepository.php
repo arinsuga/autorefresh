@@ -123,6 +123,48 @@ class TransactionRepository extends EloquentRepository implements TransactionRep
             $services = $data['services'] ?? null;
             unset($data['services']);
 
+            // Handle image upload and compression
+            if (isset($data['upload']) && $data['upload'] instanceof \Illuminate\Http\UploadedFile) {
+                $file = $data['upload'];
+                $uploadDirectory = 'autorefresh';
+                
+                // 1. Save new file using Filex helper
+                $path = Filex::upload(null, $uploadDirectory, $file, 'public', 'transaction');
+                
+                if ($path) {
+                    $fullPath = storage_path('app/public/' . $path);
+                    
+                    if (file_exists($fullPath)) {
+                        $img = Image::make($fullPath);
+                        
+                        // Compress if > 1MB
+                        if (filesize($fullPath) > 1048576) {
+                            if ($img->width() > 1600) {
+                                $img->resize(1600, null, function ($constraint) {
+                                    $constraint->aspectRatio();
+                                    $constraint->upsize();
+                                });
+                            }
+                            
+                            $quality = 85;
+                            $img->save($fullPath, $quality);
+                            while (filesize($fullPath) > 1048576 && $quality > 10) {
+                                $quality -= 10;
+                                $img->save($fullPath, $quality);
+                            }
+                        }
+                        
+                        // 2. Delete old photo if exists
+                        if ($transaction->transaction_photo) {
+                            Filex::delete($transaction->transaction_photo, 'public');
+                        }
+
+                        // 3. Set new photo path
+                        $data['transaction_photo'] = $path;
+                    }
+                }
+            }
+
             $transaction->update($data);
 
             if (is_array($services)) {

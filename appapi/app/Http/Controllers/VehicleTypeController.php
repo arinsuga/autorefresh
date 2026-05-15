@@ -34,6 +34,10 @@ class VehicleTypeController extends Controller
 
     public function store(Request $request)
     {
+        if (!$this->isSuper()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $request->validate([
             'vehicle_type_code' => 'required|string|unique:vehicle_types,vehicle_type_code',
             'vehicle_type_name' => 'required|string|unique:vehicle_types,vehicle_type_name',
@@ -45,6 +49,10 @@ class VehicleTypeController extends Controller
 
     public function update(Request $request, $id)
     {
+        if (!$this->isSuper()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $vehicleType = $this->repository->find($id);
 
         if (!$vehicleType) {
@@ -62,6 +70,10 @@ class VehicleTypeController extends Controller
 
     public function destroy($id)
     {
+        if (!$this->isSuper()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $vehicleType = $this->repository->find($id);
 
         if (!$vehicleType) {

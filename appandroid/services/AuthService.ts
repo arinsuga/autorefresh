@@ -255,6 +255,43 @@ export const refreshAuthToken = async () => {
 
 
 };
+ 
+export const refreshUser = async () => {
+  const auth = await getAuth();
+  const token = auth?.token?.token;
+
+  if (!token) return null;
+
+  try {
+    const response = await axios.get(`${API_URL}/me`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    const userServer = response.data;
+    
+    // Map server response to frontend user structure
+    const updatedUser: IUser = {
+      fullname: userServer.name,
+      username: auth?.user?.username || userServer.email,
+      roles: auth?.user?.roles || [], // auth/me might not return roles by default, keep existing or handle if it does
+      email: userServer.email,
+      branch_id: userServer.branch_id || auth?.user?.branch_id,
+    };
+
+    const updatedAuth = {
+      ...auth!,
+      user: updatedUser
+    };
+
+    await storeAuth(updatedAuth);
+    authSubject.next(updatedAuth);
+    return updatedUser;
+
+  } catch (error) {
+    console.error('===== ERROR: AuthService - refreshUser =====', error);
+    return null;
+  }
+};
 
 export const verifyToken = (token: string):IToken => {
 
