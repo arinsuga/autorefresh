@@ -57,7 +57,7 @@ const ReportFilterDialog = ({
     onExportCSV, 
     onCancel 
 }: IReportFilterProps) => {
-    const [reportType, setReportType] = useState<'Summary' | 'Detail'>('Summary');
+    const [reportType, setReportType] = useState<'Summary' | 'Detail'>('Detail');
     const [selectedBranch, setSelectedBranch] = useState<IBranch | null>(initialBranch || null);
     const [dateFrom, setDateFrom] = useState<string>(moment().startOf('month').format(Dates.format.isoDate));
     const [dateTo, setDateTo] = useState<string>(moment().format(Dates.format.isoDate));
@@ -176,16 +176,16 @@ const ReportFilterDialog = ({
                             <Text style={styles.sectionLabel}>Jenis Laporan</Text>
                             <View style={styles.toggleContainer}>
                                 <TouchableOpacity 
-                                    style={[styles.toggleButton, reportType === 'Summary' && styles.toggleButtonActive]}
-                                    onPress={() => setReportType('Summary')}
-                                >
-                                    <Text style={[styles.toggleText, reportType === 'Summary' && styles.toggleTextActive]}>Ringkasan</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity 
                                     style={[styles.toggleButton, reportType === 'Detail' && styles.toggleButtonActive]}
                                     onPress={() => setReportType('Detail')}
                                 >
                                     <Text style={[styles.toggleText, reportType === 'Detail' && styles.toggleTextActive]}>Rincian</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity 
+                                    style={[styles.toggleButton, reportType === 'Summary' && styles.toggleButtonActive]}
+                                    onPress={() => setReportType('Summary')}
+                                >
+                                    <Text style={[styles.toggleText, reportType === 'Summary' && styles.toggleTextActive]}>Ringkasan</Text>
                                 </TouchableOpacity>
                             </View>
                         </View>

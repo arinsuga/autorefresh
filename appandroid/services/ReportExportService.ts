@@ -108,7 +108,7 @@ const ReportExportService = {
                 </tr>
             `;
             data.forEach((trx: ITransaction, index) => {
-                totalRevenue += trx.net_total;
+                totalRevenue += Number(trx.net_total || 0);
                 const services = trx.transaction_services?.map(s => s.service_type?.service_type_name).join(', ') || '-';
                 
                 tableRows += `
@@ -120,7 +120,7 @@ const ReportExportService = {
                         <td>${trx.vehicle_type?.vehicle_type_name}</td>
                         <td>${services}</td>
                         <td>${trx.payment_method?.payment_method_name}</td>
-                        <td style="text-align: right;">${trx.net_total.toLocaleString('id-ID')}</td>
+                        <td style="text-align: right;">${Number(trx.net_total || 0).toLocaleString('id-ID')}</td>
                     </tr>
                 `;
             });
@@ -209,21 +209,28 @@ const ReportExportService = {
             header = 'No,Cabang,Kendaraan,Jumlah Trx,Total (Rp)\n';
             let csvRows: string[] = [];
             let globalIndex = 1;
+            let totalRevenue = 0;
 
             Object.keys(groupedByBranch).sort().forEach(bName => {
                 const vehicles = groupedByBranch[bName];
                 Object.keys(vehicles).sort().forEach(vName => {
                     const info = vehicles[vName];
+                    totalRevenue += Number(info.total || 0);
                     csvRows.push(`${globalIndex++},${bName},${vName},${info.trx},${info.total}`);
                 });
             });
             rows = csvRows.join('\n');
+            rows += `\n,,,Total Bersih Keseluruhan,${totalRevenue}`;
         } else {
             header = 'No,No. Trx,Tanggal,No. Polisi,Kendaraan,Layanan,Metode Bayar,Total Bersih (Rp)\n';
+            let totalRevenue = 0;
             rows = data.map((trx: ITransaction, index) => {
+                const val = Number(trx.net_total || 0);
+                totalRevenue += val;
                 const services = trx.transaction_services?.map(s => s.service_type?.service_type_name).join(' | ') || '-';
-                return `${index + 1},${trx.transaction_number},${trx.transaction_dt},${trx.plate_number},${trx.vehicle_type?.vehicle_type_name},"${services}",${trx.payment_method?.payment_method_name},${trx.net_total}`;
+                return `${index + 1},${trx.transaction_number},${trx.transaction_dt},${trx.plate_number},${trx.vehicle_type?.vehicle_type_name},"${services}",${trx.payment_method?.payment_method_name},${val}`;
             }).join('\n');
+            rows += `\n,,,,,,Total Bersih Keseluruhan,${totalRevenue}`;
         }
 
         const csvContent = header + rows;
