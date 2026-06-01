@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "BSCSteam",
-    "slug": "BSCSteam",
+    "name": "Autorefresh",
+    "slug": "Autorefresh",
     "version": "1.0.0",
     "orientation": "default",
     "icon": "./assets/images/icon.png",
@@ -14,11 +14,11 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.berkahsidiq.BSCSteam",
+      "bundleIdentifier": "com.berkahsidiq.autorefresh",
       "infoPlist": {
         "NSCameraUsageDescription": "$(PRODUCT_NAME) needs access to your Camera.",
         "NSMicrophoneUsageDescription": "$(PRODUCT_NAME) needs access to your Microphone.",
-        "NSLocationWhenInUseUsageDescription": "[BSCSteam] needs your location."
+        "NSLocationWhenInUseUsageDescription": "[autorefresh] needs your location."
       }
     },
     "android": {
@@ -26,7 +26,7 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.berkahsidiq.BSCSteam",
+      "package": "com.berkahsidiq.autorefresh",
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO",
@@ -63,7 +63,7 @@
           "enableMicrophonePermission": true,
           "microphonePermissionText": "$(PRODUCT_NAME) needs access to your Microphone.",
           "enableLocation": true,
-          "locationPermissionText": "[BSCSteam] needs your location."
+          "locationPermissionText": "[autorefresh] needs your location."
         }
       ],
       "expo-localization",
