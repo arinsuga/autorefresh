@@ -82,6 +82,9 @@
       "typedRoutes": true
     },
     "extra": {
+      "eas": {
+        "projectId": "49bed21c-4059-4fdd-9d42-e02afa14a9e0"
+      }
     },
     "owner": "sugaprivate"
   }
