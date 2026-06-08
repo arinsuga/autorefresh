@@ -14,11 +14,11 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.arinsuga.autorefresh",
+      "bundleIdentifier": "com.arinsuga.Autorefresh",
       "infoPlist": {
         "NSCameraUsageDescription": "$(PRODUCT_NAME) needs access to your Camera.",
         "NSMicrophoneUsageDescription": "$(PRODUCT_NAME) needs access to your Microphone.",
-        "NSLocationWhenInUseUsageDescription": "[autorefresh] needs your location."
+        "NSLocationWhenInUseUsageDescription": "[Autorefresh] needs your location."
       }
     },
     "android": {
@@ -26,7 +26,7 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.arinsuga.autorefresh",
+      "package": "com.arinsuga.Autorefresh",
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO",
@@ -63,7 +63,7 @@
           "enableMicrophonePermission": true,
           "microphonePermissionText": "$(PRODUCT_NAME) needs access to your Microphone.",
           "enableLocation": true,
-          "locationPermissionText": "[autorefresh] needs your location."
+          "locationPermissionText": "[Autorefresh] needs your location."
         }
       ],
       "expo-localization",
@@ -83,8 +83,10 @@
     },
     "extra": {
       "eas": {
-        "projectId": "49bed21c-4059-4fdd-9d42-e02afa14a9e0"
-      }
+        "projectId": "6e0d3c99-5b4c-408c-b3a3-c749c5956ef5"
+      },
+      "EXPO_PUBLIC_AUTHAPIURL": "https://autorefreshauthapi.arinsuga.com/",
+      "EXPO_PUBLIC_APPAPIURL": "https://autorefreshappapi.arinsuga.com/"
     },
     "owner": "sugaprivate"
   }

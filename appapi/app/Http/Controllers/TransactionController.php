@@ -20,11 +20,11 @@ class TransactionController extends Controller
     {
         $params = $request->all();
         $user = JWTAuth::parseToken()->authenticate();
-        
+
         // ADMIN can only view current date
-        if ($this->isAdmin() && !$this->isMaster() && !$this->isSuper()) {
-            $params['date'] = now()->format('Y-m-d');
-        }
+        // if ($this->isAdmin() && !$this->isMaster() && !$this->isSuper()) {
+        //     $params['date'] = now()->format('Y-m-d');
+        // }
 
         $transactions = $this->repository->getAllPaginated($params);
         return response()->json($transactions, 200);
@@ -43,9 +43,10 @@ class TransactionController extends Controller
 
     public function store(Request $request)
     {
-        if (!$this->isMaster() && !$this->isSuper() && !$this->isAdmin()) {
-            return response()->json(['error' => 'Unauthorized'], 403);
-        }
+        // if (!$this->isMaster() && !$this->isSuper() && !$this->isAdmin()) {
+        //     return response()->json(['error' => 'Unauthorized'], 403);
+        // }
+
         $request->validate([
             'branch_id'         => 'required|exists:branches,id',
             'transaction_dt'    => 'required|date',
@@ -71,9 +72,9 @@ class TransactionController extends Controller
 
     public function update(Request $request, $id)
     {
-        if (!$this->isMaster() && !$this->isSuper()) {
-            return response()->json(['error' => 'Unauthorized'], 403);
-        }
+        // if (!$this->isMaster() && !$this->isSuper()) {
+        //     return response()->json(['error' => 'Unauthorized'], 403);
+        // }
 
         $transaction = $this->repository->find($id);
 
@@ -89,7 +90,7 @@ class TransactionController extends Controller
             'payment_method_id' => 'exists:payment_methods,id',
             'gross_total'       => 'numeric|min:0',
             'net_total'         => 'numeric|min:0',
-            'upload'            => 'nullable|image|max:10240',
+            //'upload'            => 'nullable|image|max:10240',
         ]);
 
         $updated = $this->repository->update($id, $request->all());
@@ -98,9 +99,9 @@ class TransactionController extends Controller
 
     public function destroy($id)
     {
-        if (!$this->isMaster() && !$this->isSuper()) {
-            return response()->json(['error' => 'Unauthorized'], 403);
-        }
+        // if (!$this->isMaster() && !$this->isSuper()) {
+        //     return response()->json(['error' => 'Unauthorized'], 403);
+        // }
 
         $transaction = $this->repository->find($id);
 
@@ -120,9 +121,9 @@ class TransactionController extends Controller
 
     public function getReportDetail(Request $request)
     {
-        if (!$this->isMaster() && !$this->isSuper()) {
-            return response()->json(['error' => 'Unauthorized'], 403);
-        }
+        // if (!$this->isMaster() && !$this->isSuper()) {
+        //     return response()->json(['error' => 'Unauthorized'], 403);
+        // }
 
         $data = $this->repository->getReportDetail($request->all());
         return response()->json(['data' => $data], 200);
@@ -130,9 +131,9 @@ class TransactionController extends Controller
 
     public function getReportSummary(Request $request)
     {
-        if (!$this->isMaster() && !$this->isSuper()) {
-            return response()->json(['error' => 'Unauthorized'], 403);
-        }
+        // if (!$this->isMaster() && !$this->isSuper()) {
+        //     return response()->json(['error' => 'Unauthorized'], 403);
+        // }
 
         $data = $this->repository->getReportSummary($request->all());
         return response()->json(['data' => $data], 200);

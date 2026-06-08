@@ -1,9 +1,22 @@
 import axios from 'axios';
 import { Platform } from 'react-native';
-import { authSubject } from './AuthService';
+import { authSubject, getToken } from './AuthService';
+import Constants from 'expo-constants';
+
+// Determine the base URL for API requests. In Expo managed workflow, environment
+// variables prefixed with `EXPO_PUBLIC_` are injected into `Constants.expoConfig.extra`.
+// However, during development they may also be available via `process.env`.
+// We fallback to `process.env` for safety.
+// Resolve the base URL for API requests, trimming any trailing slash.
+const rawBase =
+    (Constants?.expoConfig?.extra?.EXPO_PUBLIC_APPAPIURL as string) ||
+    (Constants?.manifest?.extra?.EXPO_PUBLIC_APPAPIURL as string) ||
+    (process.env.EXPO_PUBLIC_APPAPIURL as string) ||
+    '';
+const baseURL = rawBase.replace(/\/+$/,''); // ensure no trailing slash
 
 const ApiService = axios.create({
-    baseURL: process.env.EXPO_PUBLIC_APPAPIURL,
+    baseURL,
     timeout: 60000, // 60s timeout for large uploads
     headers: {
         'Accept': 'application/json',
@@ -12,10 +25,21 @@ const ApiService = axios.create({
 
 // Request interceptor to attach JWT token and handle multipart/form-data
 ApiService.interceptors.request.use(
-    (config) => {
+    async (config) => {
+        // Prefer the in‑memory authSubject value; if it is missing, fall back to the persisted token.
+        let token = '';
         const auth = authSubject.value;
         if (auth && auth.token && auth.token.token) {
-            config.headers.Authorization = `Bearer ${auth.token.token}`;
+            token = auth.token.token;
+        } else {
+            // Retrieve token from AsyncStorage (may be slower but ensures we have it)
+            token = await getToken();
+        }
+
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        } else {
+            console.warn('ApiService: no auth token available for request');
         }
 
         // If sending FormData, prevent Axios from serializing it.
@@ -43,7 +67,7 @@ ApiService.interceptors.response.use(
     (error) => {
         if (error.response && error.response.status === 401) {
             // Optional: Handle auto-logout or token refresh here
-            console.log('Unauthorized - possible token expiry');
+            // console.log('Unauthorized - possible token expiry');
         }
         return Promise.reject(error);
     }

@@ -12,7 +12,7 @@ return [
     */
 
     'company' => [
-        'version' => '3.1.0',
+        'version' => '1.0.0',
         'name' => env('APP_COMPANY_NAME', 'Company Name'),
         'appname' => env('APP_NAME', 'Demo App'),
         'website' => 'http://demo.com/',

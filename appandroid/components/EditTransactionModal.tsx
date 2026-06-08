@@ -10,7 +10,8 @@ import {
     Alert, 
     ActivityIndicator,
     Image,
-    Platform
+    Platform,
+    Dimensions,
 } from 'react-native';
 import { Colors } from '@/constants/Colors';
 import Styles from '@/constants/Styles';
@@ -24,11 +25,14 @@ import TransactionService from '@/services/TransactionService';
 import VehicleTypeSelector from '@/components/VehicleTypeSelector';
 import ServiceSelector from '@/components/ServiceSelector';
 import PlateOCRModal from '@/components/PlateOCRModal';
-import { cleanPlateNumber } from '@/utils/PlateUtils';
+import { cleanPlateNumber, formatPlateNumber } from '@/utils/PlateUtils';
 import Fileutils from '@/utils/Fileutils';
 import * as FileSystem from 'expo-file-system';
+import TextRecognition from 'react-native-text-recognition';
 import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 import { showMessage } from 'react-native-flash-message';
+
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 interface EditTransactionModalProps {
     visible: boolean;
@@ -55,31 +59,66 @@ const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
     const [capturedImage, setCapturedImage] = useState<string | null>(null);
     const [isOCRVisible, setIsOCRVisible] = useState(false);
 
+    const resetForm = () => {
+        setPlateNumber('');
+        setSelectedVehicleType(null);
+        setSelectedServiceId(null);
+        setCapturedImage(null);
+        setVehicleTypes([]);
+        setServiceTypes([]);
+    };
+
     useEffect(() => {
         if (visible && transaction) {
             setPlateNumber(transaction.plate_number);
             setCapturedImage(transaction.transaction_photo || null);
-            fetchInitialData();
+            fetchInitialData(transaction);
+        } else if (!visible) {
+            resetForm();
         }
     }, [visible, transaction]);
 
-    const fetchInitialData = async () => {
+    const fetchInitialData = async (trx: ITransaction) => {
         setIsLoading(true);
+        setSelectedVehicleType(null);
+        setSelectedServiceId(null);
+        setVehicleTypes([]);
+        setServiceTypes([]);
+
         try {
             const vTypes = await VehicleTypeService.getActive();
             setVehicleTypes(vTypes);
-            
-            if (transaction) {
-                const currentType = vTypes.find(t => t.id === transaction.vehicle_type_id);
-                if (currentType) {
-                    setSelectedVehicleType(currentType);
-                    const sTypes = await ServiceTypeService.getByVehicleType(currentType.id);
-                    setServiceTypes(sTypes);
-                    
-                    if (transaction.transaction_services && transaction.transaction_services.length > 0) {
-                        setSelectedServiceId(transaction.transaction_services[0].service_type_id);
-                    }
-                }
+
+            // Determine desired service and vehicle from transaction_services if available
+            const txServiceObj = trx.transaction_services?.[0]?.service_type ?? null;
+
+            // service id from transaction (may be string)
+            const txServiceId = Number(trx.transaction_services?.[0]?.service_type_id ?? txServiceObj?.id ?? 0) || 0;
+
+            // prefer vehicle id referenced by the service_type, otherwise use trx.vehicle_type_id
+            const txVehicleIdFromService = Number(txServiceObj?.vehicle_type_id ?? 0) || 0;
+            const txVehicleId = txVehicleIdFromService || Number(trx.vehicle_type_id ?? trx.vehicle_type?.id ?? 0) || 0;
+
+            const currentType = vTypes.find(t => Number(t.id) === txVehicleId);
+
+            if (currentType) {
+                setSelectedVehicleType(currentType);
+                const sTypes = await ServiceTypeService.getByVehicleType(currentType.id);
+                setServiceTypes(sTypes);
+
+                // If the transaction's service id exists in the loaded services, select it.
+                const selectedId = txServiceId && sTypes.some(s => Number(s.id) === txServiceId)
+                    ? txServiceId
+                    : (sTypes[0]?.id ?? null);
+
+                setSelectedServiceId(selectedId);
+            } else if (vTypes.length > 0) {
+                // Fallback: choose first active vehicle type and its first service
+                const fallbackType = vTypes[0];
+                setSelectedVehicleType(fallbackType);
+                const sTypes = await ServiceTypeService.getByVehicleType(fallbackType.id);
+                setServiceTypes(sTypes);
+                setSelectedServiceId(sTypes[0]?.id ?? null);
             }
         } catch (error) {
             console.error('Failed to fetch data for edit', error);
@@ -91,6 +130,7 @@ const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
 
     const handleVehicleTypeSelect = async (type: IVehicleType) => {
         setSelectedVehicleType(type);
+        setSelectedServiceId(null);
         try {
             const sTypes = await ServiceTypeService.getByVehicleType(type.id);
             setServiceTypes(sTypes);
@@ -101,6 +141,86 @@ const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
             }
         } catch (error) {
             console.error('Failed to fetch service types', error);
+        }
+    };
+
+    const processOCRCapture = async (imagePath: string, cropData: { x: number; y: number; w: number; h: number }) => {
+        const uri = imagePath.startsWith('file://') ? imagePath : `file://${imagePath}`;
+        setCapturedImage(uri);
+        setIsOCRVisible(false);
+
+        try {
+            const normalized = await manipulateAsync(
+                uri,
+                [{ resize: { width: 1200 } }],
+                { compress: 0.8, format: SaveFormat.JPEG }
+            );
+
+            const { x, y, w, h } = cropData;
+            const pW = normalized.width;
+            const pH = normalized.height;
+            const screenAspect = SCREEN_WIDTH / SCREEN_HEIGHT;
+            const photoAspect = pW / pH;
+
+            let scale: number;
+            let offsetX = 0;
+            let offsetY = 0;
+
+            if (photoAspect > screenAspect) {
+                scale = pH / SCREEN_HEIGHT;
+                offsetX = (pW - (SCREEN_WIDTH * scale)) / 2;
+            } else {
+                scale = pW / SCREEN_WIDTH;
+                offsetY = (pH - (SCREEN_HEIGHT * scale)) / 2;
+            }
+
+            const cropX = (x * scale) + offsetX;
+            const cropY = (y * scale) + offsetY;
+            const cropW = w * scale;
+            const cropH = h * scale;
+
+            const cropped = await manipulateAsync(
+                normalized.uri,
+                [
+                    {
+                        crop: {
+                            originX: Math.max(0, Math.floor(cropX)),
+                            originY: Math.max(0, Math.floor(cropY)),
+                            width: Math.min(Math.floor(cropW), pW - Math.floor(cropX)),
+                            height: Math.min(Math.floor(cropH), pH - Math.floor(cropY)),
+                        },
+                    },
+                ],
+                { compress: 1.0, format: SaveFormat.JPEG }
+            );
+
+            const cleanPath = Platform.OS === 'android' ? cropped.uri.replace('file://', '') : cropped.uri;
+            const result = await TextRecognition.recognize(cleanPath);
+
+            let bestCandidate = '';
+            if (result && result.length > 0) {
+                let highestScore = -1;
+                result.forEach(line => {
+                    const cleanedLine = cleanPlateNumber(line);
+                    if (!cleanedLine) return;
+                    let score = 0;
+                    if (/^[A-Z]{1,2}\d{1,4}[A-Z]{1,3}$/.test(cleanedLine)) score += 100;
+                    else if (/^[A-Z]{1,2}\d{1,4}/.test(cleanedLine)) score += 50;
+                    if (cleanedLine.length >= 4 && cleanedLine.length <= 9) score += 20;
+                    if (score > highestScore) {
+                        highestScore = score;
+                        bestCandidate = cleanedLine;
+                    }
+                });
+                if (!bestCandidate) bestCandidate = result[0];
+            }
+
+            const detectedPlate = formatPlateNumber(bestCandidate || '');
+            if (detectedPlate) {
+                setPlateNumber(detectedPlate);
+            }
+        } catch (error) {
+            console.warn('OCR failed for edit capture', error);
         }
     };
 
@@ -248,8 +368,12 @@ const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
                             <VehicleTypeSelector 
                                 types={vehicleTypes} 
                                 selectedId={selectedVehicleType?.id} 
-                                onSelect={() => {}} 
-                                onSelectType={handleVehicleTypeSelect} 
+                                onSelect={(id) => {
+                                    const type = vehicleTypes.find((type) => type.id === id);
+                                    if (type) {
+                                        handleVehicleTypeSelect(type);
+                                    }
+                                }} 
                             />
 
                             <ServiceSelector 
@@ -295,10 +419,8 @@ const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
             <PlateOCRModal 
                 visible={isOCRVisible} 
                 onClose={() => setIsOCRVisible(false)} 
-                onCapture={(imagePath) => {
-                    const uri = imagePath.startsWith('file://') ? imagePath : `file://${imagePath}`;
-                    setCapturedImage(uri);
-                    setIsOCRVisible(false);
+                onCapture={(imagePath, cropData) => {
+                    processOCRCapture(imagePath, cropData);
                 }} 
             />
         </Modal>

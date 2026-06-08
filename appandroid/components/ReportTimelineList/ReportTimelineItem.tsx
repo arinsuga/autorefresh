@@ -113,7 +113,7 @@ const ReportTimelineItem = memo(({ item, onPress, onEdit, onDelete }: ReportTime
                         <Icon.Dashboard color={Colors.grey} size={18} />
                         <View style={{ flex: 1 }}>
                             <Text style={styles.infoText}>
-                                {item.transaction_services?.map(s => s.service_type?.service_type_name).join(', ')}
+                                {item.transaction_services?.map(s => s.service_type?.service_name).join(', ')}
                             </Text>
                         </View>
                     </View>

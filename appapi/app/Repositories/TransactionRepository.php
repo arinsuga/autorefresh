@@ -109,6 +109,29 @@ class TransactionRepository extends EloquentRepository implements TransactionRep
     }
 
     /**
+     * Delete transaction and remove uploaded photo from storage.
+     */
+    public function delete($id)
+    {
+        return \DB::transaction(function () use ($id) {
+            $transaction = $this->data->find($id);
+
+            if (!$transaction) {
+                return null;
+            }
+
+            $photoPath = $transaction->getOriginal('transaction_photo');
+            if (!empty($photoPath)) {
+                Filex::delete($photoPath, 'public');
+            }
+
+            $transaction->delete();
+
+            return $transaction;
+        });
+    }
+
+    /**
      * Update transaction header and sync services.
      */
     public function update($id, $data)
@@ -155,8 +178,9 @@ class TransactionRepository extends EloquentRepository implements TransactionRep
                         }
                         
                         // 2. Delete old photo if exists
-                        if ($transaction->transaction_photo) {
-                            Filex::delete($transaction->transaction_photo, 'public');
+                        $oldPhotoPath = $transaction->getOriginal('transaction_photo');
+                        if (!empty($oldPhotoPath)) {
+                            Filex::delete($oldPhotoPath, 'public');
                         }
 
                         // 3. Set new photo path

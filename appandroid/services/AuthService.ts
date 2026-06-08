@@ -120,12 +120,9 @@ export const getAuth = async (): Promise<IAuth | null> => {
     };
 
   } catch(e) {
-
-    console.log('===== ERROR: AuthService - getAuth =====');
-    console.log(e);
-    result = await initAuth();
-
-  }
+        // Silently fallback to initAuth on storage errors
+        result = await initAuth();
+    }
 
   return result;
 }
@@ -134,10 +131,6 @@ export const login = async (username?: string, password?: string, branch_id?: nu
 
     await clearAuth();
     authSubject.next(null);
-
-    console.log("===== Authservice - login =====");
-    console.log(`${API_URL}/login`);
-    console.log(`username : ${username}, password : ${password}, branch_id : ${branch_id}`);
 
     const response = await axios.post(`${API_URL}/login`, { email: username, password, branch_id });
     const { token }: any = response.data;
@@ -246,11 +239,7 @@ export const refreshAuthToken = async () => {
     return token;
       
   } catch(e) {
-    
-    console.log('======= ERROR =======');
-    console.log(`${API_URL}/refresh-token`);
-    console.log(e);
-
+    // Refresh token failed – let caller handle the error silently
   }
 
 

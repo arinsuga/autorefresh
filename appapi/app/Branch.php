@@ -31,14 +31,6 @@ class Branch extends Model
     ];
 
     /**
-     * Users assigned to this branch.
-     */
-    public function users()
-    {
-        return $this->hasMany('App\User', 'branch_id');
-    }
-
-    /**
      * Transactions recorded at this branch.
      */
     public function transactions()

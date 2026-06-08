@@ -18,7 +18,7 @@ class User extends Authenticatable implements JWTSubject
      */
     protected $fillable = [
         'name', 'email', 'password', 'email_verified_at',
-        'branch_id', 'is_disabled',
+        'is_disabled',
     ];
 
     /**
@@ -122,14 +122,6 @@ class User extends Authenticatable implements JWTSubject
     public function attends()
     {
         return $this->hasMany('Arins\Fo\Models\Attend');
-    }
-
-    /**
-     * Branch that this user is assigned to.
-     */
-    public function branch()
-    {
-        return $this->belongsTo('App\Branch', 'branch_id');
     }
 
     public function getJWTIdentifier()
